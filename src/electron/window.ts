@@ -36,8 +36,8 @@ function createKzzWindow(entry: string, preload: string) {
     bv.webContents.openDevTools()
     bv.webContents.loadURL("https://login.kwaixiaodian.com/")
 
-    bv.webContents.on("did-finish-load", () => {
-        bv.webContents.executeJavaScript(`kzz.NewToolBar()`);
+    bv.webContents.on("dom-ready", () => {
+        console.log('ready');
     })
 
     fromEvent(mainWindow, 'resize')
