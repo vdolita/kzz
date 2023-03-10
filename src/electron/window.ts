@@ -3,7 +3,7 @@ import { debounce, fromEvent, timer } from "rxjs";
 
 const kzzWidth = 1320
 const kzzHeight = 800
-const toolHeight = 200
+const toolHeight = 500
 
 function createKzzWindow(entry: string, preload: string, tool: string) {
     // Create the browser window.
@@ -22,7 +22,7 @@ function createKzzWindow(entry: string, preload: string, tool: string) {
     mainWindow.loadURL(entry);
 
     // Open the DevTools.
-    // mainWindow.webContents.openDevTools();
+    mainWindow.webContents.openDevTools();
 
     const bv = new BrowserView({
         webPreferences: {
