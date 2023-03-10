@@ -15,6 +15,9 @@ const config: ForgeConfig = {
   plugins: [
     new WebpackPlugin({
       mainConfig,
+      devServer: {
+        host: 'localhost',
+      },
       renderer: {
         config: rendererConfig,
         entryPoints: [
@@ -26,6 +29,10 @@ const config: ForgeConfig = {
               js: './src/preload.ts',
             },
           },
+          {
+            js: './src/tool-bar/index.ts',
+            name: 'tool',
+          }
         ],
       },
     }),

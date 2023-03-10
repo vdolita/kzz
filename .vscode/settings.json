@@ -2,5 +2,6 @@
     "cSpell.words": [
         "fontsource",
         "kwaixiaodian"
-    ]
+    ],
+    "editor.formatOnSave": true,
 }
