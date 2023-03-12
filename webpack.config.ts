@@ -4,6 +4,7 @@ import HtmlWebpackPlugin from 'html-webpack-plugin';
 
 import commonConfig from './webpack.common.config';
 import rules from './webpack.rules';
+import path from 'path';
 
 const mainConfig: Configuration = {
     ...commonConfig,
@@ -37,7 +38,15 @@ const mainConfig: Configuration = {
         }),
     ],
     devServer: {
-        static: './dist'
+        static: './dist',
+        hot: true,
+        devMiddleware: {
+            writeToDisk: true,
+        },
+        historyApiFallback: true,
+        headers: {
+            'Content-Security-Policy': "default-src 'self' 'unsafe-inline' data:; script-src 'self' 'unsafe-eval' 'unsafe-inline' data:",
+        },
     },
 }
 
@@ -77,4 +86,37 @@ const preloadConfig: Configuration = {
     },
 }
 
-export default [mainConfig, rendererConfig, preloadConfig];
+const toolBarConfig: Configuration = {
+    ...commonConfig,
+    entry: {
+        toolbar: './src/tool-bar/index.ts',
+    },
+    target: 'web',
+    module: {
+        rules: [
+            ...rules,
+            {
+                test: /\.css$/i,
+                use: ['style-loader', 'css-loader'],
+            },
+            {
+                test: /\.(png|svg|jpg|jpeg|gif)$/i,
+                type: 'asset/resource',
+            },
+            {
+                test: /\.(woff|woff2|eot|ttf|otf)$/i,
+                type: 'asset/resource',
+            },
+        ]
+    },
+    output: {
+        ...commonConfig.output,
+        path: path.resolve(__dirname, 'dist', 'tool-bar'),
+        library: {
+            type: 'umd',
+            name: 'KzzTB',
+        },
+    },
+}
+
+export default [toolBarConfig, mainConfig, rendererConfig, preloadConfig];

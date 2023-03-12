@@ -1,11 +1,7 @@
-import { protocol } from 'electron';
+import ToolBar from "./tool-bar";
 
-
-function registerProtocol() {
-    protocol.registerFileProtocol('file', (request, callback) => {
-        const url = request.url.replace('file:///', '');
-        callback({ path: url });
-    })
+const CreateToolBar = () => {
+    ToolBar()
 }
 
-export { registerProtocol }
+export default CreateToolBar;
