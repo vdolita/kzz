@@ -1,7 +1,5 @@
 import { createRoot } from "react-dom/client";
 
-import './tool-bar.css'
-
 const ToolBar = function() {
   const root = document.createElement('div');
   root.classList.add('tool-bar');
