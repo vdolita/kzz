@@ -1,15 +1,17 @@
-import { Stack, Tab, Tabs } from "@mui/material";
-import { useState } from "react";
+import { Tabs } from "antd";
+import type { TabsProps } from "antd";
 import { createRoot } from "react-dom/client";
-import TabPanel from "../components/tab-panel";
-import AutoHelper from "./auto-helper/helper";
-import ToolLayout from "./layout";
 
 import "./tool-bar.css";
+import Helper from "./helper/helper";
 
 function NewToolBar() {
   const toolBar = document.createElement("div");
   toolBar.id = "kzz-tool-bar";
+  toolBar.classList.add("w-full");
+  toolBar.classList.add("fixed");
+  toolBar.classList.add("bottom-0");
+
   document.body.appendChild(toolBar);
 
   const root = createRoot(document.getElementById("kzz-tool-bar"));
@@ -20,37 +22,27 @@ function NewToolBar() {
 export default NewToolBar;
 
 const ToolBar = () => {
-  const [tabIndex, setTabIndex] = useState(0);
-
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
-    setTabIndex(newValue);
-  };
-
-  function a11yProps(index: number) {
-    return {
-      id: `simple-tab-${index}`,
-      "aria-controls": `simple-tabpanel-${index}`,
-    };
-  }
+  const items: TabsProps["items"] = [
+    {
+      key: "1",
+      label: "功能设置",
+      children: <Helper />,
+    },
+    // {
+    //   key: "2",
+    //   label: "ex",
+    //   children: "Content of Tab Pane 2",
+    // },
+    // {
+    //   key: "3",
+    //   label: "其他功能",
+    //   children: "Content of Tab Pane 3",
+    // },
+  ];
 
   return (
-    <ToolLayout>
-      <Stack spacing={0}>
-        <Tabs value={tabIndex} onChange={handleChange}>
-          <Tab label="自动功能" {...a11yProps(0)} />
-          <Tab label="互动" {...a11yProps(1)} />
-          <Tab label="日志" {...a11yProps(2)} />
-        </Tabs>
-        <TabPanel value={tabIndex} index={0}>
-          <AutoHelper />
-        </TabPanel>
-        <TabPanel value={tabIndex} index={1}>
-          Item Two
-        </TabPanel>
-        <TabPanel value={tabIndex} index={2}>
-          Item Three
-        </TabPanel>
-      </Stack>
-    </ToolLayout>
+    <div className="px-2.5">
+      <Tabs defaultActiveKey="1" items={items} />
+    </div>
   );
 };

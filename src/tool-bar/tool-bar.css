@@ -2,12 +2,3 @@
 @import "~@fontsource/roboto/400.css";
 @import "~@fontsource/roboto/500.css";
 @import "~@fontsource/roboto/700.css";
-
-#kzz-tool-bar {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 200px;
-  background-color: lightpink;
-}
