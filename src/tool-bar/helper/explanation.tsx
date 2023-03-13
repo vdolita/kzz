@@ -1,4 +1,4 @@
-import { Radio } from "antd";
+import { Radio, Button } from "antd";
 import type { RadioChangeEvent } from "antd";
 import { useState } from "react";
 
@@ -46,6 +46,9 @@ export default function Explanation() {
           className="flex-grow rounded border-2 border-slate-400"
         />
       </div>
+      <Button type="primary" className="bg-sky-400">
+        开始
+      </Button>
     </div>
   );
 }
