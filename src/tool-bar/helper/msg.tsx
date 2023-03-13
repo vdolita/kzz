@@ -8,15 +8,6 @@ export default function IntervalMsg() {
   const [isStarted, setIsStarted] = useState(false);
   const [sub, setSub] = useState<Subscription>(null);
 
-  //   "//button/span[contains(text(), '发送')]/..",
-  const msgInput: HTMLInputElement | null = document.evaluate(
-    '//input[contains(@placeholder, "发公评")]',
-    document.body,
-    null,
-    XPathResult.FIRST_ORDERED_NODE_TYPE,
-    null
-  ).singleNodeValue as HTMLInputElement;
-
   const onChange = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.value === "") {
       setMsgPeriod("");
@@ -43,6 +34,15 @@ export default function IntervalMsg() {
   };
 
   function sendMsg() {
+    //   "//button/span[contains(text(), '发送')]/..",
+    const msgInput: HTMLInputElement | null = document.evaluate(
+      '//input[contains(@placeholder, "发公评")]',
+      document.body,
+      null,
+      XPathResult.FIRST_ORDERED_NODE_TYPE,
+      null
+    ).singleNodeValue as HTMLInputElement;
+
     if (!msgInput) {
       return;
     }
