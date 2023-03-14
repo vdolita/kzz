@@ -1,32 +1,23 @@
-import { Button } from "antd";
+import { Button, InputNumber, Input } from "antd";
 import { ChangeEvent, useEffect, useState } from "react";
 import { interval, Subscription } from "rxjs";
+import FeatureBox from "../components/feature-box";
+
+const defaultPeriod = 60;
+const minPeriod = 1;
+const maxPeriod = 86400;
+
+const { TextArea } = Input;
 
 export default function IntervalMsg() {
-  const [msgPeriod, setMsgPeriod] = useState<string>("1");
+  const [msgPeriod, setMsgPeriod] = useState<number>(defaultPeriod);
   const [msgContent, setMsgContent] = useState("");
   const [isStarted, setIsStarted] = useState(false);
   const [sub, setSub] = useState<Subscription>(null);
 
-  const onChange = (e: ChangeEvent<HTMLInputElement>) => {
-    if (e.target.value === "") {
-      setMsgPeriod("");
-      return;
-    }
-
-    if (isNaN(parseInt(e.target.value))) {
-      return;
-    }
-
-    if (parseInt(e.target.value) <= 0) {
-      return;
-    }
-
-    if (parseInt(e.target.value) > 86400) {
-      return;
-    }
-
-    setMsgPeriod(e.target.value);
+  const onChange = (val: number) => {
+    console.log(`set period to ${val}`);
+    setMsgPeriod(val);
   };
 
   const onContentChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -51,14 +42,12 @@ export default function IntervalMsg() {
   }
 
   function startInterval() {
-    const period = isNaN(parseInt(msgPeriod)) ? 0 : parseInt(msgPeriod);
-
-    if (period <= 0) {
+    if (msgPeriod <= 0) {
       return;
     }
 
     console.log("start interval");
-    const msgSub = interval(period * 1000).subscribe(() => {
+    const msgSub = interval(msgPeriod * 1000).subscribe(() => {
       console.log("send msg");
       sendMsg();
     });
@@ -70,7 +59,7 @@ export default function IntervalMsg() {
     if (!isStarted) {
       startInterval();
     } else {
-      console.log("unsubscribe");
+      sub && console.log("unsubscribe");
       sub?.unsubscribe();
       sub && setSub(null);
     }
@@ -85,37 +74,42 @@ export default function IntervalMsg() {
   }, [sub]);
 
   return (
-    <div className="flex flex-col gap-y-2 bg-stone-50 p-2">
-      <p className="text-base text-center">定时发言</p>
+    <FeatureBox title="定时发言">
       <div className="flex flex-row gap-x-4">
         <span className="basis-16">发言间隔:</span>
-        <input
-          type="number"
-          min={1}
-          max={86400}
-          value={msgPeriod}
-          onChange={onChange}
-          disabled={isStarted}
-          className="basis-32 rounded border-2 border-slate-400"
-        />
+        <div>
+          <InputNumber
+            min={minPeriod}
+            max={maxPeriod}
+            defaultValue={defaultPeriod}
+            value={msgPeriod}
+            onChange={onChange}
+            disabled={isStarted}
+            size="small"
+          />
+        </div>
         <span>秒</span>
         <Button
           type="primary"
           onClick={onButtonClick}
-          disabled={isNaN(parseInt(msgPeriod)) || parseInt(msgPeriod) <= 0}
+          disabled={msgContent === "" || !msgPeriod}
           className="bg-sky-400"
+          size="small"
         >
           {isStarted ? "停止" : "开始"}
         </Button>
       </div>
       <div className="flex flex-row gap-x-4">
         <span className="basis-16">发言内容:</span>
-        <textarea
-          value={msgContent}
-          onChange={onContentChange}
-          className="h-20 border-2 border-slate-400 rounded flex-grow"
-        ></textarea>
+        <div className="flex-grow">
+          <TextArea
+            value={msgContent}
+            onChange={onContentChange}
+            disabled={isStarted}
+            rows={3}
+          />
+        </div>
       </div>
-    </div>
+    </FeatureBox>
   );
 }

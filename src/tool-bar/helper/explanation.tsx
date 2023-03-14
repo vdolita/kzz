@@ -1,7 +1,8 @@
-import { Radio, Button, Select } from "antd";
+import { Radio, Button, Select, InputNumber } from "antd";
 import type { RadioChangeEvent } from "antd";
 import { useEffect, useState } from "react";
 import { interval, startWith, Subscription, timer } from "rxjs";
+import FeatureBox from "../components/feature-box";
 // import _ from "lodash";
 
 interface Product {
@@ -10,6 +11,10 @@ interface Product {
   name: string;
 }
 
+const defaultPeriod = 60;
+const minPeriod = 1;
+const maxPeriod = 86400;
+
 export default function Explanation() {
   const [timeUnit, setTimeUnit] = useState(1);
   const [products, setProducts] = useState<Product[]>(getProducts());
@@ -17,8 +22,8 @@ export default function Explanation() {
   const [isStarted, setIsStarted] = useState(false);
   const [expSub, setExpSub] = useState<Subscription>(null);
   const [gapSub, setGapSub] = useState<Subscription>(null);
-  const [expPeriod, setExpPeriod] = useState<string>("1");
-  const [gapPeriod, setGapPeriod] = useState<string>("1");
+  const [expPeriod, setExpPeriod] = useState<number>(defaultPeriod);
+  const [gapPeriod, setGapPeriod] = useState<number>(defaultPeriod);
 
   /**  //button/span[contains(text(),"开始讲解")]/ancestor::div[contains(@class, "goods-item")] */
   /**  //div[contains(@class, "with-order")]/input  */
@@ -33,9 +38,9 @@ export default function Explanation() {
       case 1:
         return "秒";
       case 2:
-        return "分钟";
+        return "分";
       case 3:
-        return "小时";
+        return "时";
       default:
         return "";
     }
@@ -88,46 +93,12 @@ export default function Explanation() {
     return products.map((p) => ({ label: p.productID, value: p.order }));
   }
 
-  function onExpPeriodChange(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.value === "") {
-      setExpPeriod("");
-      return;
-    }
-
-    if (isNaN(parseInt(e.target.value))) {
-      return;
-    }
-
-    if (parseInt(e.target.value) <= 0) {
-      return;
-    }
-
-    if (parseInt(e.target.value) > 86400) {
-      return;
-    }
-
-    setExpPeriod(e.target.value);
+  function onExpPeriodChange(val: number) {
+    setExpPeriod(val);
   }
 
-  function onGapPeriodChange(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.value === "") {
-      setGapPeriod("");
-      return;
-    }
-
-    if (isNaN(parseInt(e.target.value))) {
-      return;
-    }
-
-    if (parseInt(e.target.value) <= 0) {
-      return;
-    }
-
-    if (parseInt(e.target.value) > 86400) {
-      return;
-    }
-
-    setGapPeriod(e.target.value);
+  function onGapPeriodChange(val: number) {
+    setGapPeriod(val);
   }
 
   function startExplanation(): string {
@@ -173,8 +144,8 @@ export default function Explanation() {
     gapSub?.unsubscribe();
     expSub?.unsubscribe();
 
-    let expPeriodSeconds = parseInt(expPeriod);
-    const gapPeriodSeconds = parseInt(gapPeriod);
+    let expPeriodSeconds = expPeriod;
+    const gapPeriodSeconds = gapPeriod;
 
     if (timeUnit === 2) {
       expPeriodSeconds *= 60;
@@ -241,11 +212,10 @@ export default function Explanation() {
   }, [expSub]);
 
   return (
-    <div className="flex flex-col gap-y-2 bg-stone-50 p-2">
-      <p className="text-base text-center">商品讲解</p>
+    <FeatureBox title="商品讲解">
       <div className="flex flex-row gap-x-4">
         <span className="basis-16">时间模式:</span>
-        <Radio.Group onChange={onChange} value={timeUnit}>
+        <Radio.Group onChange={onChange} value={timeUnit} disabled={isStarted}>
           <Radio value={1}>秒钟</Radio>
           <Radio value={2}>分钟</Radio>
           <Radio value={3}>小时</Radio>
@@ -253,24 +223,28 @@ export default function Explanation() {
       </div>
       <div className="flex flex-row gap-x-4">
         <span className="basis-16">讲解时长:</span>
-        <input
-          type="number"
-          min={1}
-          max={86400}
-          value={expPeriod}
-          onChange={onExpPeriodChange}
-          className="basis-20 rounded border-2 border-slate-400"
-        />
+        <div>
+          <InputNumber
+            min={minPeriod}
+            max={maxPeriod}
+            value={expPeriod}
+            onChange={onExpPeriodChange}
+            size="small"
+            disabled={isStarted}
+          />
+        </div>
         <span>{getTimeUnitStr()}</span>
-        <span className="basis-16">间隔:</span>
-        <input
-          type="number"
-          min={1}
-          max={86400}
-          value={gapPeriod}
-          onChange={onGapPeriodChange}
-          className="basis-20 rounded border-2 border-slate-400"
-        />
+        <span>间隔:</span>
+        <div>
+          <InputNumber
+            min={minPeriod}
+            max={maxPeriod}
+            value={gapPeriod}
+            onChange={onGapPeriodChange}
+            size="small"
+            disabled={isStarted}
+          />
+        </div>
         <span>秒</span>
       </div>
       <div className="flex flex-row gap-x-4">
@@ -290,12 +264,12 @@ export default function Explanation() {
       </div>
       <Button
         type="primary"
-        disabled={isNaN(parseInt(expPeriod)) || parseInt(expPeriod) <= 0}
+        disabled={!selected.size || !gapPeriod || !expPeriod}
         className="bg-sky-400"
         onClick={onButtonClick}
       >
         {isStarted ? "停止讲解" : "开始讲解"}
       </Button>
-    </div>
+    </FeatureBox>
   );
 }
