@@ -7,4 +7,6 @@ function registerFileProtocol() {
     })
 }
 
-export { registerFileProtocol}
+
+
+export { registerFileProtocol }

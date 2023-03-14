@@ -1,6 +1,7 @@
 import { Button, InputNumber, Input } from "antd";
 import { ChangeEvent, useEffect, useState } from "react";
 import { interval, Subscription } from "rxjs";
+import { changeInputValue } from "../util/util";
 import FeatureBox from "../components/feature-box";
 
 const defaultPeriod = 60;
@@ -50,9 +51,7 @@ export default function IntervalMsg() {
       return;
     }
 
-    const event = new Event("invalid", { bubbles: true });
-    msgInput.value = msgContent;
-    msgInput.dispatchEvent(event);
+    changeInputValue(msgInput, msgContent);
     msgButton.click();
   }
 

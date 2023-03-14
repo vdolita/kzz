@@ -1,9 +1,8 @@
 import { Radio, Button, Select, InputNumber } from "antd";
 import type { RadioChangeEvent } from "antd";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { interval, startWith, Subscription, timer } from "rxjs";
 import FeatureBox from "../components/feature-box";
-import _ from "lodash";
 
 interface Product {
   productID: number;
@@ -127,7 +126,26 @@ export default function Explanation() {
     selected.delete(pdID);
     setSelected(new Set(selected));
     pdBtn.click();
+    timer(1000).subscribe(() => {
+      clickConfirmBtn();
+    });
     return pdID;
+  }
+
+  function clickConfirmBtn() {
+    const confirmBtn = document.evaluate(
+      `//div[contains(@class, "ant-modal-body")]//button/span[contains(text(), "确 定")]/..`,
+      document,
+      null,
+      XPathResult.FIRST_ORDERED_NODE_TYPE,
+      null
+    ).singleNodeValue as HTMLButtonElement;
+
+    if (!confirmBtn) {
+      return;
+    }
+
+    confirmBtn.click();
   }
 
   function endExplanation(pdId: string) {
@@ -144,6 +162,10 @@ export default function Explanation() {
     }
 
     pdBtn.click();
+
+    timer(1000).subscribe(() => {
+      clickConfirmBtn();
+    });
   }
 
   function startIntervalExplanation() {
@@ -194,20 +216,37 @@ export default function Explanation() {
     setSelected(new Set(value));
   };
 
-  // refresh products every 100ms
-  useEffect(() => {
-    console.log("refresh products");
-    if (pdSub) {
-      return;
+  function isProductsEqual(p1: Product[], p2: Product[]) {
+    if (p1.length !== p2.length) {
+      return false;
     }
 
-    const productSubscribe = interval(100).subscribe(() => {
-      const pds = getProducts();
-      if (_.isEqual(pds, products)) {
-        return;
+    for (let i = 0; i < p1.length; i++) {
+      if (p1[i].productID !== p2[i].productID) {
+        return false;
       }
-      console.log("products changed", pds);
-      setProducts(pds);
+    }
+
+    return true;
+  }
+
+  const refreshProducts = useCallback(() => {
+    const pds = getProducts();
+    if (isProductsEqual(pds, products)) {
+      return;
+    }
+    console.log("products changed", pds);
+    setProducts(pds);
+  }, [products]);
+
+  // refresh products every 100ms
+  useEffect(() => {
+    if (pdSub) {
+      pdSub.unsubscribe();
+    }
+    console.log("refresh products");
+    const productSubscribe = interval(100).subscribe(() => {
+      refreshProducts();
     });
 
     setPdSub(productSubscribe);
@@ -216,7 +255,7 @@ export default function Explanation() {
       console.log("unsubscribe products");
       pdSub?.unsubscribe();
     };
-  }, [pdSub, products]);
+  }, [pdSub, refreshProducts]);
 
   useEffect(() => {
     return () => {
