@@ -3,7 +3,7 @@ import type { RadioChangeEvent } from "antd";
 import { useEffect, useState } from "react";
 import { interval, startWith, Subscription, timer } from "rxjs";
 import FeatureBox from "../components/feature-box";
-// import _ from "lodash";
+import _ from "lodash";
 
 interface Product {
   productID: number;
@@ -11,7 +11,7 @@ interface Product {
   name: string;
 }
 
-const defaultPeriod = 60;
+const defaultPeriod = 50;
 const minPeriod = 1;
 const maxPeriod = 86400;
 
@@ -22,6 +22,7 @@ export default function Explanation() {
   const [isStarted, setIsStarted] = useState(false);
   const [expSub, setExpSub] = useState<Subscription>(null);
   const [gapSub, setGapSub] = useState<Subscription>(null);
+  const [pdSub, setPdSub] = useState<Subscription>(null);
   const [expPeriod, setExpPeriod] = useState<number>(defaultPeriod);
   const [gapPeriod, setGapPeriod] = useState<number>(defaultPeriod);
 
@@ -51,25 +52,26 @@ export default function Explanation() {
       "//button/span[contains(text(),'开始讲解')]/ancestor::div[contains(@class, 'goods-item')]",
       document,
       null,
-      XPathResult.ORDERED_NODE_ITERATOR_TYPE,
+      XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
       null
     );
 
     const p: Product[] = [];
 
-    for (let i = 0; i++; i < snapItems.snapshotLength) {
+    for (let i = 0; i < snapItems.snapshotLength; i++) {
       const item = snapItems.snapshotItem(i) as HTMLDivElement;
       // id=c1goods-3765256721344
       const id = item.id.split("-")[1];
+
       const snapInput = document.evaluate(
-        `//div[contains(@class, 'with-order')]/input`,
+        `.//div[contains(@class, 'with-order')]/input`,
         item,
         null,
         XPathResult.FIRST_ORDERED_NODE_TYPE,
         null
       );
       const snapProductTitle = document.evaluate(
-        `//div[contains(@class, 'cardTitle')]/div[contains(@class, 'text')]`,
+        `.//div[contains(@class, 'cardTitle')]/div[contains(@class, 'text')]`,
         item,
         null,
         XPathResult.FIRST_ORDERED_NODE_TYPE,
@@ -90,7 +92,11 @@ export default function Explanation() {
   }
 
   function getOptions() {
-    return products.map((p) => ({ label: p.productID, value: p.order }));
+    return products.map((p) => ({
+      label: p.order,
+      value: p.productID,
+      key: p.productID,
+    }));
   }
 
   function onExpPeriodChange(val: number) {
@@ -190,20 +196,27 @@ export default function Explanation() {
 
   // refresh products every 100ms
   useEffect(() => {
+    console.log("refresh products");
+    if (pdSub) {
+      return;
+    }
+
     const productSubscribe = interval(100).subscribe(() => {
-      // const pds = getProducts();
-      // if (_.isEqual(pds, products)) {
-      //   return;
-      // } else {
-      //   setProducts(pds);
-      // }
-      setProducts(getProducts());
+      const pds = getProducts();
+      if (_.isEqual(pds, products)) {
+        return;
+      }
+      console.log("products changed", pds);
+      setProducts(pds);
     });
 
+    setPdSub(productSubscribe);
+
     return () => {
-      productSubscribe?.unsubscribe();
+      console.log("unsubscribe products");
+      pdSub?.unsubscribe();
     };
-  }, []);
+  }, [pdSub, products]);
 
   useEffect(() => {
     return () => {

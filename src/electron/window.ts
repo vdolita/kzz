@@ -3,7 +3,7 @@ import { debounce, fromEvent, timer } from "rxjs";
 
 const kzzWidth = 1320
 const kzzHeight = 800
-const toolHeight = 500
+const toolHeight = 0
 
 function createKzzWindow(entry: string, preload: string, tool: string) {
     // Create the browser window.
@@ -49,7 +49,7 @@ function createKzzWindow(entry: string, preload: string, tool: string) {
 
     bv.setBounds({ x: 0, y: titleBarHeight, width: kzzWidth, height: kzzHeight - titleBarHeight - toolHeight })
     bv.webContents.openDevTools()
-    bv.webContents.loadURL("https://login.kwaixiaodian.com/")
+    bv.webContents.loadURL("https://zs.kwaixiaodian.com/page/helper")
 
     bv.webContents.on('did-finish-load', () => {
         const src = tool.replace('file://', 'kzz://')

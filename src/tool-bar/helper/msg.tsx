@@ -34,11 +34,26 @@ export default function IntervalMsg() {
       null
     ).singleNodeValue as HTMLInputElement;
 
-    if (!msgInput) {
+    //var s =document.createElement('script')
+    // s.src = "http://localhost:8080/tool.js"
+    // document.body.appendChild(s)
+
+    const msgButton: HTMLButtonElement | null = document.evaluate(
+      "//button/span[contains(text(), '发送')]/..",
+      document.body,
+      null,
+      XPathResult.FIRST_ORDERED_NODE_TYPE,
+      null
+    ).singleNodeValue as HTMLButtonElement;
+
+    if (!msgInput || !msgButton) {
       return;
     }
+
+    const event = new Event("invalid", { bubbles: true });
     msgInput.value = msgContent;
-    msgInput.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter" }));
+    msgInput.dispatchEvent(event);
+    msgButton.click();
   }
 
   function startInterval() {

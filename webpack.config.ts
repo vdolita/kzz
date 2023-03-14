@@ -74,13 +74,22 @@ const config: webpack.Configuration = {
         ignored: ['**/node_modules', '**/dist', '**/out'],
     },
     output: {
-        path: path.resolve(__dirname, '.webpack', 'tool-bar'),
+        path: path.resolve(__dirname, 'dist'),
         filename: 'tool.js',
         library: {
             type: 'umd',
             name: 'KzzTB',
         },
-    }
+    },
+    devServer: {
+        host: 'localhost',
+        allowedHosts: 'all',
+        headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers': '*',
+            'Access-Control-Allow-Methods': '*',
+        },
+    },
 };
 
 export default config;
