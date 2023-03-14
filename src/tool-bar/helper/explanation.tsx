@@ -2,7 +2,7 @@ import { Radio, Button, Select } from "antd";
 import type { RadioChangeEvent } from "antd";
 import { useEffect, useState } from "react";
 import { interval, startWith, Subscription, timer } from "rxjs";
-import _ from "lodash";
+// import _ from "lodash";
 
 interface Product {
   productID: number;
