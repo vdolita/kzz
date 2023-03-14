@@ -1,7 +1,8 @@
 import { Radio, Button, Select } from "antd";
 import type { RadioChangeEvent } from "antd";
 import { useEffect, useState } from "react";
-import { interval, Subscription } from "rxjs";
+import { interval, startWith, Subscription, timer } from "rxjs";
+import _ from "lodash";
 
 interface Product {
   productID: number;
@@ -12,21 +13,18 @@ interface Product {
 export default function Explanation() {
   const [timeUnit, setTimeUnit] = useState(1);
   const [products, setProducts] = useState<Product[]>(getProducts());
-  const [productSubscribe, setProductSubscribe] = useState<Subscription>(
-    interval(100).subscribe(() => {
-      const pds = getProducts();
-      setProducts(pds);
-    })
-  );
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [isStarted, setIsStarted] = useState(false);
-  const [sub, setSub] = useState<Subscription>(null);
+  const [expSub, setExpSub] = useState<Subscription>(null);
+  const [gapSub, setGapSub] = useState<Subscription>(null);
+  const [expPeriod, setExpPeriod] = useState<string>("1");
+  const [gapPeriod, setGapPeriod] = useState<string>("1");
 
-  //  //button/span[contains(text(),"开始讲解")]/ancestor::div[contains(@class, "goods-item")]
-  //  //div[contains(@class, "with-order")]/input
+  /**  //button/span[contains(text(),"开始讲解")]/ancestor::div[contains(@class, "goods-item")] */
+  /**  //div[contains(@class, "with-order")]/input  */
+  /**  //div[contains(@id, '3847058175018')]//button/span[contains(text(), '开始')]/.. */
 
   const onChange = (e: RadioChangeEvent) => {
-    console.log("radio checked", e.target.value);
     setTimeUnit(e.target.value);
   };
 
@@ -90,15 +88,126 @@ export default function Explanation() {
     return products.map((p) => ({ label: p.productID, value: p.order }));
   }
 
+  function onExpPeriodChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.value === "") {
+      setExpPeriod("");
+      return;
+    }
+
+    if (isNaN(parseInt(e.target.value))) {
+      return;
+    }
+
+    if (parseInt(e.target.value) <= 0) {
+      return;
+    }
+
+    if (parseInt(e.target.value) > 86400) {
+      return;
+    }
+
+    setExpPeriod(e.target.value);
+  }
+
+  function onGapPeriodChange(e: React.ChangeEvent<HTMLInputElement>) {
+    if (e.target.value === "") {
+      setGapPeriod("");
+      return;
+    }
+
+    if (isNaN(parseInt(e.target.value))) {
+      return;
+    }
+
+    if (parseInt(e.target.value) <= 0) {
+      return;
+    }
+
+    if (parseInt(e.target.value) > 86400) {
+      return;
+    }
+
+    setGapPeriod(e.target.value);
+  }
+
+  function startExplanation(): string {
+    if (selected.size === 0) {
+      return;
+    }
+    const pdID = selected.values().next().value;
+    const pdBtn = document.evaluate(
+      `//div[contains(@id, '${pdID}')]//button/span[contains(text(), '开始')]/..`,
+      document,
+      null,
+      XPathResult.FIRST_ORDERED_NODE_TYPE,
+      null
+    ).singleNodeValue as HTMLButtonElement;
+
+    if (!pdBtn) {
+      return;
+    }
+
+    selected.delete(pdID);
+    setSelected(new Set(selected));
+    pdBtn.click();
+    return pdID;
+  }
+
+  function endExplanation(pdId: string) {
+    const pdBtn = document.evaluate(
+      `//div[contains(@id, '${pdId}')]//button/span[contains(text(), '结束')]/..`,
+      document,
+      null,
+      XPathResult.FIRST_ORDERED_NODE_TYPE,
+      null
+    ).singleNodeValue as HTMLButtonElement;
+
+    if (!pdBtn) {
+      return;
+    }
+
+    pdBtn.click();
+  }
+
+  function startIntervalExplanation() {
+    gapSub?.unsubscribe();
+    expSub?.unsubscribe();
+
+    let expPeriodSeconds = parseInt(expPeriod);
+    const gapPeriodSeconds = parseInt(gapPeriod);
+
+    if (timeUnit === 2) {
+      expPeriodSeconds *= 60;
+    } else if (timeUnit === 3) {
+      expPeriodSeconds *= 3600;
+    }
+
+    const newSub = interval(expPeriodSeconds * 1000 + gapPeriodSeconds * 1000)
+      .pipe(startWith(0))
+      .subscribe(() => {
+        const pdId = startExplanation();
+        if (!pdId) {
+          return;
+        }
+
+        const newExpSub = timer(expPeriodSeconds * 1000).subscribe(() => {
+          endExplanation(pdId);
+        });
+
+        setExpSub(newExpSub);
+      });
+
+    setGapSub(newSub);
+  }
+
   function onButtonClick() {
     if (isStarted) {
-      sub?.unsubscribe();
-      setSub(null);
+      expSub?.unsubscribe();
+      gapSub?.unsubscribe();
+      setExpSub(null);
+      setGapSub(null);
     } else {
-      const sub = interval(100).subscribe(() => {
-        //
-      });
-      setSub(sub);
+      startIntervalExplanation();
     }
     setIsStarted(!isStarted);
   }
@@ -108,11 +217,28 @@ export default function Explanation() {
     setSelected(new Set(value));
   };
 
+  // refresh products every 100ms
   useEffect(() => {
+    const productSubscribe = interval(100).subscribe(() => {
+      // const pds = getProducts();
+      // if (_.isEqual(pds, products)) {
+      //   return;
+      // } else {
+      //   setProducts(pds);
+      // }
+      setProducts(getProducts());
+    });
+
     return () => {
       productSubscribe?.unsubscribe();
     };
-  }, [productSubscribe]);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      expSub?.unsubscribe();
+    };
+  }, [expSub]);
 
   return (
     <div className="flex flex-col gap-y-2 bg-stone-50 p-2">
@@ -131,6 +257,8 @@ export default function Explanation() {
           type="number"
           min={1}
           max={86400}
+          value={expPeriod}
+          onChange={onExpPeriodChange}
           className="basis-20 rounded border-2 border-slate-400"
         />
         <span>{getTimeUnitStr()}</span>
@@ -139,6 +267,8 @@ export default function Explanation() {
           type="number"
           min={1}
           max={86400}
+          value={gapPeriod}
+          onChange={onGapPeriodChange}
           className="basis-20 rounded border-2 border-slate-400"
         />
         <span>秒</span>
@@ -158,7 +288,12 @@ export default function Explanation() {
           />
         </div>
       </div>
-      <Button type="primary" className="bg-sky-400">
+      <Button
+        type="primary"
+        disabled={isNaN(parseInt(expPeriod)) || parseInt(expPeriod) <= 0}
+        className="bg-sky-400"
+        onClick={onButtonClick}
+      >
         {isStarted ? "停止讲解" : "开始讲解"}
       </Button>
     </div>
