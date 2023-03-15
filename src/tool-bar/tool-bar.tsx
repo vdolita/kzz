@@ -4,6 +4,7 @@ import { createRoot } from "react-dom/client";
 
 import "./tool-bar.css";
 import Helper from "./helper/helper";
+import { waitForElement } from "./util/util";
 
 function NewToolBar() {
   const toolBar = document.createElement("div");
@@ -11,10 +12,13 @@ function NewToolBar() {
   toolBar.classList.add("w-full");
   toolBar.classList.add("fixed");
   toolBar.classList.add("bottom-0");
+  toolBar.classList.add("bg-slate-100");
 
-  document.body.appendChild(toolBar);
+  waitForElement("div#root section#main-container").then((mainContainer) => {
+    mainContainer.appendChild(toolBar);
+  });
 
-  const root = createRoot(document.getElementById("kzz-tool-bar"));
+  const root = createRoot(toolBar);
   root.render(<ToolBar />);
   console.log("tool loaded");
 }

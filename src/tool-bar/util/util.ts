@@ -21,4 +21,33 @@ function forceReactInputOnChange(input: HTMLInputElement, value: string) {
     input.dispatchEvent(new Event("input", { bubbles: true }));
 }
 
-export { setNativeValue, changeInputValue, forceReactInputOnChange }
+function waitForElement(selector: string, timeout = 10000): Promise<HTMLElement> {
+    return new Promise((resolve, reject) => {
+        if (document.querySelector(selector)) {
+            return resolve(document.querySelector(selector) as HTMLElement)
+        }
+
+        let observer: MutationObserver | null = null
+
+        const timerId = setTimeout(() => {
+            reject(new Error(`Element ${selector} not found`))
+            observer?.disconnect()
+        }, timeout)
+
+        observer = new MutationObserver(() => {
+            const element = document.querySelector(selector)
+            if (element) {
+                resolve(element as HTMLElement)
+                observer.disconnect()
+                clearTimeout(timerId)
+            }
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true,
+        });
+    });
+}
+
+export { setNativeValue, changeInputValue, forceReactInputOnChange, waitForElement }

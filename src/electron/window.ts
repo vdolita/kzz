@@ -1,7 +1,7 @@
 import { BrowserView, BrowserWindow } from "electron"
 import { debounce, fromEvent, timer } from "rxjs";
 
-const kzzWidth = 1320
+const kzzWidth = 1440
 const kzzHeight = 800
 const toolHeight = 0
 
@@ -52,12 +52,15 @@ function createKzzWindow(entry: string, preload: string, tool: string) {
     bv.webContents.loadURL("https://zs.kwaixiaodian.com/page/helper")
 
     bv.webContents.on('did-finish-load', () => {
-        const src = tool.replace('file://', 'kzz://')
-        bv.webContents.executeJavaScript(`
-        const js = document.createElement('script')
-        js.src = '${src}'
-        document.body.appendChild(js)
-        `).catch(console.error)
+        const url = bv.webContents.getURL()
+        if (url.includes("page/helper")) {
+            const src = tool.replace('file://', 'kzz://')
+            bv.webContents.executeJavaScript(`
+                const js = document.createElement('script')
+                js.src = '${src}'
+                document.body.appendChild(js)
+            `).catch(console.error)
+        }
     })
 
 
