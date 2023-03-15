@@ -82,7 +82,7 @@ export default function IntervalMsg() {
 
   useEffect(() => {
     return () => {
-      sub && console.log("unsubscribe");
+      sub && console.log("unsubscribe mgs effect");
       sub?.unsubscribe();
     };
   }, [sub]);

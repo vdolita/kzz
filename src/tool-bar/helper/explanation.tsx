@@ -1,6 +1,6 @@
-import { Radio, Button, Select, InputNumber } from "antd";
+import { Radio, Button, Select, InputNumber, Switch } from "antd";
 import type { RadioChangeEvent } from "antd";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { interval, startWith, Subscription, timer } from "rxjs";
 import FeatureBox from "../components/feature-box";
 
@@ -13,25 +13,56 @@ interface Product {
 const defaultPeriod = 50;
 const minPeriod = 1;
 const maxPeriod = 86400;
+const minGapPeriod = 5;
 
 export default function Explanation() {
   const [timeUnit, setTimeUnit] = useState(1);
   const [products, setProducts] = useState<Product[]>(getProducts());
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selected, setSelected] = useState<Array<string>>([]);
   const [isStarted, setIsStarted] = useState(false);
   const [expSub, setExpSub] = useState<Subscription>(null);
   const [gapSub, setGapSub] = useState<Subscription>(null);
-  const [pdSub, setPdSub] = useState<Subscription>(null);
   const [expPeriod, setExpPeriod] = useState<number>(defaultPeriod);
   const [gapPeriod, setGapPeriod] = useState<number>(defaultPeriod);
+  const [isInterval, setIsInterval] = useState(true);
+  const [currentProduct, setCurrentProduct] = useState<string>("");
+
+  const startExpRef = useRef<() => string>(null);
+  const stopExpRef = useRef<() => void>(null);
 
   /**  //button/span[contains(text(),"开始讲解")]/ancestor::div[contains(@class, "goods-item")] */
   /**  //div[contains(@class, "with-order")]/input  */
   /**  //div[contains(@id, '3847058175018')]//button/span[contains(text(), '开始')]/.. */
 
-  const onChange = (e: RadioChangeEvent) => {
+  function onTimeUnitChange(e: RadioChangeEvent) {
     setTimeUnit(e.target.value);
+  }
+
+  function onExpPeriodChange(val: number) {
+    setExpPeriod(val);
+  }
+
+  function onGapPeriodChange(val: number) {
+    setGapPeriod(val);
+  }
+
+  function onIsIntervalChange() {
+    setIsInterval(!isInterval);
+  }
+
+  const onSelectedPdsChange = (value: string[]) => {
+    console.log(`selected ${value}`);
+    setSelected(value);
   };
+
+  function onButtonClick() {
+    if (isStarted) {
+      stopExpInterval();
+    } else {
+      startExpInterval();
+    }
+    setIsStarted(!isStarted);
+  }
 
   function getTimeUnitStr() {
     switch (timeUnit) {
@@ -98,19 +129,22 @@ export default function Explanation() {
     }));
   }
 
-  function onExpPeriodChange(val: number) {
-    setExpPeriod(val);
-  }
-
-  function onGapPeriodChange(val: number) {
-    setGapPeriod(val);
-  }
-
-  function startExplanation(): string {
-    if (selected.size === 0) {
-      return;
+  const startExplanation = useCallback((): string => {
+    if (selected.length === 0) {
+      return "";
     }
-    const pdID = selected.values().next().value;
+
+    console.log("startExplanation", selected);
+
+    let pdID = selected[0];
+    const pdIndex = selected.indexOf(currentProduct);
+
+    if (pdIndex > -1 && pdIndex < selected.length - 1) {
+      pdID = selected[pdIndex + 1];
+    }
+
+    setCurrentProduct(pdID);
+
     const pdBtn = document.evaluate(
       `//div[contains(@id, '${pdID}')]//button/span[contains(text(), '开始')]/..`,
       document,
@@ -123,14 +157,21 @@ export default function Explanation() {
       return;
     }
 
-    selected.delete(pdID);
-    setSelected(new Set(selected));
+    if (!isInterval) {
+      const newSelected = selected.filter((s) => s !== pdID);
+      setSelected(newSelected);
+
+      if (newSelected.length === 0) {
+        expSub?.unsubscribe();
+      }
+    }
+
     pdBtn.click();
     timer(1000).subscribe(() => {
       clickConfirmBtn();
     });
     return pdID;
-  }
+  }, [currentProduct, expSub, isInterval, selected]);
 
   function clickConfirmBtn() {
     const confirmBtn = document.evaluate(
@@ -168,12 +209,17 @@ export default function Explanation() {
     });
   }
 
-  function startIntervalExplanation() {
+  function startExpInterval() {
+    console.log("start interval");
     gapSub?.unsubscribe();
     expSub?.unsubscribe();
 
     let expPeriodSeconds = expPeriod;
-    const gapPeriodSeconds = gapPeriod;
+    let gapPeriodSeconds = gapPeriod;
+
+    if (gapPeriodSeconds < minGapPeriod) {
+      gapPeriodSeconds = minGapPeriod;
+    }
 
     if (timeUnit === 2) {
       expPeriodSeconds *= 60;
@@ -181,11 +227,17 @@ export default function Explanation() {
       expPeriodSeconds *= 3600;
     }
 
-    const newSub = interval(expPeriodSeconds * 1000 + gapPeriodSeconds * 1000)
+    const newGapSub = interval(
+      expPeriodSeconds * 1000 + gapPeriodSeconds * 1000
+    )
       .pipe(startWith(0))
       .subscribe(() => {
-        const pdId = startExplanation();
+        console.log("start exxxp");
+        const pdId = startExpRef.current();
         if (!pdId) {
+          console.log("no product to start");
+          setIsStarted(false);
+          stopExpRef.current();
           return;
         }
 
@@ -196,33 +248,26 @@ export default function Explanation() {
         setExpSub(newExpSub);
       });
 
-    setGapSub(newSub);
+    setGapSub(newGapSub);
   }
 
-  function onButtonClick() {
-    if (isStarted) {
-      expSub?.unsubscribe();
-      gapSub?.unsubscribe();
-      setExpSub(null);
-      setGapSub(null);
-    } else {
-      startIntervalExplanation();
-    }
-    setIsStarted(!isStarted);
-  }
-
-  const handleChange = (value: string[]) => {
-    console.log(`selected ${value}`);
-    setSelected(new Set(value));
-  };
+  const stopExpInterval = useCallback(() => {
+    console.log("stop interval");
+    expSub?.unsubscribe();
+    gapSub?.unsubscribe();
+    setExpSub(null);
+    setGapSub(null);
+  }, [expSub, gapSub]);
 
   function isProductsEqual(p1: Product[], p2: Product[]) {
     if (p1.length !== p2.length) {
+      console.log("length not equal");
       return false;
     }
 
     for (let i = 0; i < p1.length; i++) {
       if (p1[i].productID !== p2[i].productID) {
+        console.log("productID not equal", p1[i].productID, p2[i].productID);
         return false;
       }
     }
@@ -239,39 +284,74 @@ export default function Explanation() {
     setProducts(pds);
   }, [products]);
 
+  useEffect(() => {
+    console.log("update stopExpRef");
+    stopExpRef.current = (): void => {
+      stopExpInterval();
+    };
+  }, [stopExpInterval]);
+
+  useEffect(() => {
+    console.log("update startExpRef");
+    startExpRef.current = (): string => {
+      return startExplanation();
+    };
+  }, [startExplanation]);
+
   // refresh products every 100ms
   useEffect(() => {
-    if (pdSub) {
-      pdSub.unsubscribe();
-    }
     console.log("refresh products");
     const productSubscribe = interval(100).subscribe(() => {
       refreshProducts();
     });
 
-    setPdSub(productSubscribe);
-
     return () => {
       console.log("unsubscribe products");
-      pdSub?.unsubscribe();
+      productSubscribe?.unsubscribe();
     };
-  }, [pdSub, refreshProducts]);
+  }, [refreshProducts]);
 
   useEffect(() => {
     return () => {
+      console.log("unsubscribe expSub effect");
       expSub?.unsubscribe();
     };
   }, [expSub]);
+
+  useEffect(() => {
+    return () => {
+      console.log("unsubscribe gapSub effect");
+      gapSub?.unsubscribe();
+    };
+  }, [gapSub]);
 
   return (
     <FeatureBox title="商品讲解">
       <div className="flex flex-row gap-x-4">
         <span className="basis-16">时间模式:</span>
-        <Radio.Group onChange={onChange} value={timeUnit} disabled={isStarted}>
-          <Radio value={1}>秒钟</Radio>
-          <Radio value={2}>分钟</Radio>
-          <Radio value={3}>小时</Radio>
-        </Radio.Group>
+        <div>
+          <Radio.Group
+            onChange={onTimeUnitChange}
+            value={timeUnit}
+            disabled={isStarted}
+            size="small"
+          >
+            <Radio value={1}>秒钟</Radio>
+            <Radio value={2}>分钟</Radio>
+            <Radio value={3}>小时</Radio>
+          </Radio.Group>
+        </div>
+        <span>循环:</span>
+        <div>
+          <Switch
+            checkedChildren="开启"
+            unCheckedChildren="关闭"
+            defaultChecked
+            checked={isInterval}
+            size="small"
+            onChange={onIsIntervalChange}
+          />
+        </div>
       </div>
       <div className="flex flex-row gap-x-4">
         <span className="basis-16">讲解时长:</span>
@@ -289,7 +369,7 @@ export default function Explanation() {
         <span>间隔:</span>
         <div>
           <InputNumber
-            min={minPeriod}
+            min={minGapPeriod}
             max={maxPeriod}
             value={gapPeriod}
             onChange={onGapPeriodChange}
@@ -308,7 +388,7 @@ export default function Explanation() {
             allowClear
             placeholder="按讲解顺序选择商品序号"
             defaultValue={[]}
-            onChange={handleChange}
+            onChange={onSelectedPdsChange}
             options={getOptions()}
             value={Array.from(selected)}
           />
@@ -316,7 +396,7 @@ export default function Explanation() {
       </div>
       <Button
         type="primary"
-        disabled={!selected.size || !gapPeriod || !expPeriod}
+        disabled={!selected.length || !gapPeriod || !expPeriod}
         className="bg-sky-400"
         onClick={onButtonClick}
       >
