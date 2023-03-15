@@ -18,6 +18,7 @@ function createKzzWindow(entry: string, preload: string, tool: string) {
         show: false,
     });
 
+    mainWindow.setMenu(null);
     // and load the index.html of the app.
     mainWindow.loadURL(entry);
 
@@ -40,6 +41,7 @@ function createKzzWindow(entry: string, preload: string, tool: string) {
             responseHeaders['content-security-policy'] = responseHeaders['content-security-policy'].map((policy: string) => {
                 return policy.replace("'unsafe-eval'", `'unsafe-eval' http://localhost:3000 ws://localhost:3000 file: ws: kzz:`)
                     .replace('font-src http:', 'font-src http: kzz:')
+                    .replace('connect-src', 'connect-src ws:')
             })
         }
 
@@ -48,12 +50,13 @@ function createKzzWindow(entry: string, preload: string, tool: string) {
 
 
     bv.setBounds({ x: 0, y: titleBarHeight, width: kzzWidth, height: kzzHeight - titleBarHeight - toolHeight })
-    // bv.webContents.openDevTools()
+    bv.webContents.openDevTools()
     bv.webContents.loadURL("https://zs.kwaixiaodian.com/page/helper")
 
     bv.webContents.on('did-finish-load', () => {
         const url = bv.webContents.getURL()
         if (url.includes("page/helper")) {
+            console.log('tool', tool)
             const src = tool.replace('file://', 'kzz://')
             bv.webContents.executeJavaScript(`
                 const js = document.createElement('script')
