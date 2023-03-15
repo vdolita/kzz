@@ -71,10 +71,6 @@ const config: webpack.Configuration = {
     resolve: {
         extensions: ['.tsx', '.ts', '.js', '.jsx'],
         fallback: {
-            "path": require.resolve("path-browserify"),
-            "fs": require.resolve("browserify-fs"),
-            "stream": require.resolve("stream-browserify"),
-            "util": false,
         },
     },
     watchOptions: {
