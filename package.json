@@ -8,6 +8,7 @@
     "start": "electron-forge start",
     "package": "electron-forge package",
     "make": "electron-forge make",
+    "makewin": "electron-forge make --platform=win32 --arch=x64",
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx .",
     "webpack": "webpack --node-env=production --mode production",
