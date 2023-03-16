@@ -13,14 +13,8 @@ rules.push({
       options: {
         postcssOptions: {
           plugins: [
-            // [
-            //   "postcss-import",
-            //   {
-            //     // Options
-            //   },
-            // ],
             [
-              "postcss-preset-env",
+              "postcss-import",
               {
                 // Options
               },
@@ -38,6 +32,12 @@ rules.push({
               },
             ],
             [
+              "postcss-preset-env",
+              {
+                features: { 'nesting-rules': false },
+              },
+            ],
+            [
               "autoprefixer",
               {
                 // Options
@@ -46,8 +46,7 @@ rules.push({
           ],
         },
       },
-    },
-  ],
+    },],
 });
 
 export const rendererConfig: Configuration = {

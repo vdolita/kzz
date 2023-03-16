@@ -37,5 +37,5 @@ export const rules: Required<ModuleOptions>['rules'] = [
         presets: ['@babel/preset-react'],
       },
     },
-  }
+  },
 ];
