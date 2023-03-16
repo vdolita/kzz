@@ -1,5 +1,9 @@
 import { BrowserView, BrowserWindow } from "electron"
-import { debounce, fromEvent, timer } from "rxjs";
+import { readFile } from "fs";
+import path from "path";
+import { fromEvent } from "rxjs/internal/observable/fromEvent";
+import { timer } from "rxjs/internal/observable/timer";
+import { debounce } from "rxjs/internal/operators/debounce";
 
 const kzzWidth = 1440
 const kzzHeight = 800
@@ -18,7 +22,7 @@ function createKzzWindow(entry: string, preload: string, tool: string) {
         show: false,
     });
 
-    mainWindow.setMenu(null);
+    mainWindow.removeMenu()
     // and load the index.html of the app.
     mainWindow.loadURL(entry);
 
@@ -56,13 +60,22 @@ function createKzzWindow(entry: string, preload: string, tool: string) {
     bv.webContents.on('did-finish-load', () => {
         const url = bv.webContents.getURL()
         if (url.includes("page/helper")) {
-            console.log('tool', tool)
-            const src = tool.replace('file://', 'kzz://')
-            bv.webContents.executeJavaScript(`
+            const src = tool.replace('file:', 'kzz:')
+            if (tool.includes('file:')) {
+
+                readFile(path.join(process.resourcesPath, 'tool.js'), (err, data) => {
+                    if (err) {
+                        return
+                    }
+                    bv.webContents.executeJavaScript(data.toString()).catch(console.error)
+                })
+            } else {
+                bv.webContents.executeJavaScript(`
                 const js = document.createElement('script')
                 js.src = '${src}'
                 document.body.appendChild(js)
             `).catch(console.error)
+            }
         }
     })
 

@@ -6,7 +6,7 @@ const config: webpack.Configuration = {
     mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
     entry: './src/tool-bar/index.ts',
     target: 'web',
-    devtool: 'inline-source-map',
+    devtool: process.env.NODE_ENV === 'production' ? false : 'inline-source-map',
     module: {
         rules: [
             {
@@ -70,8 +70,6 @@ const config: webpack.Configuration = {
     },
     resolve: {
         extensions: ['.tsx', '.ts', '.js', '.jsx'],
-        fallback: {
-        },
     },
     watchOptions: {
         ignored: ['**/node_modules', '**/dist', '**/out'],

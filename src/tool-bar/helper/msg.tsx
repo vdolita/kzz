@@ -1,8 +1,9 @@
 import { Button, InputNumber, Input } from "antd";
 import { ChangeEvent, useEffect, useState } from "react";
-import { interval, Subscription } from "rxjs";
 import { changeInputValue } from "../util/util";
 import FeatureBox from "../components/feature-box";
+import { Subscription } from "rxjs/internal/Subscription";
+import { interval } from "rxjs/internal/observable/interval";
 
 const defaultPeriod = 60;
 const minPeriod = 1;

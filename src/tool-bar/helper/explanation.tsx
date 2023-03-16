@@ -1,8 +1,11 @@
 import { Radio, Button, Select, InputNumber, Switch } from "antd";
 import type { RadioChangeEvent } from "antd";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { interval, startWith, Subscription, timer } from "rxjs";
 import FeatureBox from "../components/feature-box";
+import { Subscription } from "rxjs/internal/Subscription";
+import { timer } from "rxjs/internal/observable/timer";
+import { interval } from "rxjs/internal/observable/interval";
+import { startWith } from "rxjs/internal/operators/startWith";
 
 interface Product {
   productID: number;
