@@ -13,6 +13,7 @@ function NewToolBar() {
   toolBar.classList.add("fixed");
   toolBar.classList.add("bottom-0");
   toolBar.classList.add("bg-slate-100");
+  toolBar.classList.add("z-10");
 
   waitForElement("div#root section#main-container").then((mainContainer) => {
     mainContainer.appendChild(toolBar);

@@ -1,1 +1,3 @@
-import '../tool-bar'
+import NewApp from './app'
+
+NewApp()
