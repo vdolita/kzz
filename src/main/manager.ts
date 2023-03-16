@@ -12,7 +12,7 @@ function createManagerWindow(entryPath: string, preloadPath: string) {
 
     managerWindow.loadURL(entryPath)
 
-    managerWindow.webContents.openDevTools()
+    // managerWindow.webContents.openDevTools()
 
     managerWindow.once("ready-to-show", () => {
         managerWindow.show()
