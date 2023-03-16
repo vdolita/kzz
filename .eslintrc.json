@@ -4,6 +4,11 @@
     "es6": true,
     "node": true
   },
+  "settings": {
+    "import/resolver": {
+      "typescript": {}
+    }
+  },
   "parser": "@typescript-eslint/parser",
   "plugins": [
     "react-hooks"
