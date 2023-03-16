@@ -1,6 +1,4 @@
 import { BrowserView, BrowserWindow } from "electron"
-import { readFile } from "fs";
-import path from "path";
 import { fromEvent } from "rxjs/internal/observable/fromEvent";
 import { timer } from "rxjs/internal/observable/timer";
 import { debounce } from "rxjs/internal/operators/debounce";
@@ -61,21 +59,12 @@ function createKzzWindow(entry: string, preload: string, tool: string) {
         const url = bv.webContents.getURL()
         if (url.includes("page/helper")) {
             const src = tool.replace('file:', 'kzz:')
-            if (tool.includes('file:')) {
 
-                readFile(path.join(process.resourcesPath, 'tool.js'), (err, data) => {
-                    if (err) {
-                        return
-                    }
-                    bv.webContents.executeJavaScript(data.toString()).catch(console.error)
-                })
-            } else {
-                bv.webContents.executeJavaScript(`
+            bv.webContents.executeJavaScript(`
                 const js = document.createElement('script')
                 js.src = '${src}'
                 document.body.appendChild(js)
             `).catch(console.error)
-            }
         }
     })
 
