@@ -4,10 +4,11 @@ import { isDev } from "../utils/app";
 
 const ksWidth = 1440;
 const ksHeight = 800;
+declare const TOOL_WEBPACK_ENTRY: string;
 
 const ksUrl = "https://zs.kwaixiaodian.com/page/helper";
 
-function createKuaishowWindow(toolPath: string, key: string) {
+function createKuaishowWindow(key: string) {
     const mw = new BrowserWindow({
         width: ksWidth,
         height: ksHeight,
@@ -21,10 +22,12 @@ function createKuaishowWindow(toolPath: string, key: string) {
     });
 
     mw.removeMenu();
+    mw.setTitle(`助手 - ${key}`);
 
     const bv = new BrowserView({
         webPreferences: {
             devTools: isDev(),
+            partition: `memory:${key}`,
         }
     })
     mw.setBrowserView(bv)
@@ -51,6 +54,7 @@ function createKuaishowWindow(toolPath: string, key: string) {
     bv.webContents.on('did-finish-load', () => {
         const url = bv.webContents.getURL()
         if (url.includes("page/helper")) {
+            const toolPath = TOOL_WEBPACK_ENTRY;
             const src = toolPath.replace('file:', 'kzz:')
 
             bv.webContents.executeJavaScript(`
