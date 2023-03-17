@@ -1,4 +1,5 @@
 import { BrowserView, BrowserWindow } from "electron";
+import { isDev } from "../utils/app";
 
 
 const ksWidth = 1440;
@@ -11,17 +12,19 @@ function createKuaishowWindow(toolPath: string, key: string) {
         width: ksWidth,
         height: ksHeight,
         webPreferences: {
-            // partition: `persist:${key}`,
+            partition: `memory:${key}`,
+            devTools: false,
         },
         minWidth: ksWidth,
         minHeight: ksHeight,
-        // show: false,
+        show: false,
     });
 
     mw.removeMenu();
 
     const bv = new BrowserView({
         webPreferences: {
+            devTools: isDev(),
         }
     })
     mw.setBrowserView(bv)
@@ -42,7 +45,7 @@ function createKuaishowWindow(toolPath: string, key: string) {
     })
 
     bv.setBounds({ x: 0, y: 0, width: ksWidth, height: ksHeight })
-    // bv.webContents.openDevTools()
+    bv.webContents.openDevTools()
     bv.webContents.loadURL(ksUrl)
 
     bv.webContents.on('did-finish-load', () => {
@@ -58,8 +61,8 @@ function createKuaishowWindow(toolPath: string, key: string) {
         }
     })
 
-    mw.once("ready-to-show", () => {
-        // mw.show()
+    bv.webContents.once('dom-ready', () => {
+        mw.show()
     })
 
     return mw;

@@ -1,4 +1,4 @@
-import type { Configuration } from 'webpack';
+import { Configuration, DefinePlugin } from 'webpack';
 
 import { rules } from './webpack.rules';
 
@@ -12,6 +12,11 @@ export const mainConfig: Configuration = {
   module: {
     rules,
   },
+  plugins: [
+    new DefinePlugin({
+      APP_ENV: JSON.stringify(process.env.NODE_ENV),
+    }),
+  ],
   resolve: {
     extensions: ['.js', '.ts', '.jsx', '.tsx', '.css', '.json'],
   },
