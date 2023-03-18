@@ -12,7 +12,8 @@ import { rendererConfig } from './webpack.renderer.config';
 const config: ForgeConfig = {
   packagerConfig: {},
   rebuildConfig: {},
-  makers: [new MakerSquirrel({}), new MakerZIP({}, ['darwin']), new MakerRpm({}), new MakerDeb({}), new PortableMaker({})],
+  // makers: [new MakerSquirrel({}), new MakerZIP({}, ['darwin']), new MakerRpm({}), new MakerDeb({}), new PortableMaker({})],
+  makers: [new PortableMaker({})],
   plugins: [
     new WebpackPlugin({
       mainConfig,

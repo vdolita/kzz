@@ -95,5 +95,5 @@ function CreateWindowButton({
     onCreate(id);
   }
 
-  return <Button onClick={handleClicked}>新建窗口</Button>;
+  return <Button onClick={handleClicked}>{`${id} 新建窗口`}</Button>;
 }

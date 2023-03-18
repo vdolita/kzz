@@ -5,7 +5,9 @@ import { isDev } from "../utils/app";
 
 
 async function activate(licenseKey: string) {
-    if (isDev()) {
+    // if (isDev()) {
+    // eslint-disable-next-line no-constant-condition
+    if (true) {
         await firstValueFrom(timer(3000));
         return true;
     }

@@ -1,5 +1,8 @@
 import { BrowserView, BrowserWindow } from "electron";
 import { isDev } from "../utils/app";
+import fs from "fs";
+import path from "path";
+import { registerFileProtocol } from "./protocol";
 
 
 const ksWidth = 1440;
@@ -12,13 +15,13 @@ function createKuaishowWindow(key: string) {
     const mw = new BrowserWindow({
         width: ksWidth,
         height: ksHeight,
+        minWidth: ksWidth,
+        minHeight: ksHeight,
+        show: false,
         webPreferences: {
             partition: `memory:${key}`,
             devTools: false,
         },
-        minWidth: ksWidth,
-        minHeight: ksHeight,
-        show: false,
     });
 
     mw.removeMenu();
@@ -27,13 +30,13 @@ function createKuaishowWindow(key: string) {
     const bv = new BrowserView({
         webPreferences: {
             devTools: isDev(),
-            partition: `memory:${key}`,
+            partition: `persist:ksw${key}`,
         }
     })
     mw.setBrowserView(bv)
     bv.setAutoResize({ width: true, height: true })
-    // const titleBarHeight = mw.getSize()[1] - mw.getContentSize()[1]
 
+    registerFileProtocol(bv.webContents.session)
     bv.webContents.session.webRequest.onHeadersReceived((details, callback) => {
         const { responseHeaders } = details
 
@@ -54,8 +57,16 @@ function createKuaishowWindow(key: string) {
     bv.webContents.on('did-finish-load', () => {
         const url = bv.webContents.getURL()
         if (url.includes("page/helper")) {
-            const toolPath = TOOL_WEBPACK_ENTRY;
-            const src = toolPath.replace('file:', 'kzz:')
+            let toolPath = TOOL_WEBPACK_ENTRY;
+
+            if (toolPath.includes('file:') && !fs.existsSync(toolPath)) {
+                toolPath = path.join(process.resourcesPath, 'app', '.webpack', 'renderer', 'tool', 'index.js')
+                toolPath = toolPath.replace(/\\/g, '/')
+                toolPath = `file://${toolPath}`
+            }
+
+            const src = toolPath.replace('file:', 'kzz:').replace(/\\/g, '/');
+            bv.webContents.executeJavaScript(`;console.log('toolPath', '${src}');`);
 
             bv.webContents.executeJavaScript(`
                 const js = document.createElement('script')
