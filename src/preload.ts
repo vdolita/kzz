@@ -4,7 +4,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IpcEvents } from './events';
 
-
 contextBridge.exposeInMainWorld('Asuka', {
     activateSoftware: (licenseKey: string) => ipcRenderer.invoke(IpcEvents.ACTIVATE_SOFTWARE, licenseKey),
     onWindowCreated: (callback: (windowId: number) => void) => {
@@ -19,5 +18,5 @@ contextBridge.exposeInMainWorld('Asuka', {
     },
     openKsWindow: (windowId: number) => {
         ipcRenderer.send(IpcEvents.CREATE_KS_WINDOWS, windowId);
-    }
+    },
 });

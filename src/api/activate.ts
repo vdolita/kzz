@@ -1,8 +1,7 @@
-import axios from "axios";
-import { firstValueFrom } from "rxjs/internal/firstValueFrom";
-import { timer } from "rxjs/internal/observable/timer";
-import { isDev } from "../utils/app";
-
+import axios from 'axios';
+import { firstValueFrom } from 'rxjs/internal/firstValueFrom';
+import { timer } from 'rxjs/internal/observable/timer';
+// import { isDev } from '../utils/app';
 
 async function activate(licenseKey: string) {
     // if (isDev()) {
@@ -12,7 +11,7 @@ async function activate(licenseKey: string) {
         return true;
     }
 
-    const response = await axios.post("https://api.licensezero.com/activate", {
+    const response = await axios.post('https://api.licensezero.com/activate', {
         licenseKey,
     });
 

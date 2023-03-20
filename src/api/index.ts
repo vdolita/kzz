@@ -1,4 +1,4 @@
-import activate from "./activate";
+import activate from './activate';
 
 // Path: src/api/index.ts
 // Compare this snippet from src/api/activate.ts:

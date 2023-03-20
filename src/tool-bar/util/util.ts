@@ -18,28 +18,28 @@ function changeInputValue(element: HTMLInputElement, value: string) {
 function forceReactInputOnChange(input: HTMLInputElement, value: string) {
     // @ts-expect-error NOTE: clear the interal value to force an actual change
     input._valueTracker?.setValue(value);
-    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event('input', { bubbles: true }));
 }
 
 function waitForElement(selector: string, timeout = 10000): Promise<HTMLElement> {
     return new Promise((resolve, reject) => {
         if (document.querySelector(selector)) {
-            return resolve(document.querySelector(selector) as HTMLElement)
+            return resolve(document.querySelector(selector) as HTMLElement);
         }
 
-        let observer: MutationObserver | null = null
+        let observer: MutationObserver | null = null;
 
         const timerId = setTimeout(() => {
-            reject(new Error(`Element ${selector} not found`))
-            observer?.disconnect()
-        }, timeout)
+            reject(new Error(`Element ${selector} not found`));
+            observer?.disconnect();
+        }, timeout);
 
         observer = new MutationObserver(() => {
-            const element = document.querySelector(selector)
+            const element = document.querySelector(selector);
             if (element) {
-                resolve(element as HTMLElement)
-                observer.disconnect()
-                clearTimeout(timerId)
+                resolve(element as HTMLElement);
+                observer.disconnect();
+                clearTimeout(timerId);
             }
         });
 
@@ -50,4 +50,4 @@ function waitForElement(selector: string, timeout = 10000): Promise<HTMLElement>
     });
 }
 
-export { setNativeValue, changeInputValue, forceReactInputOnChange, waitForElement }
+export { setNativeValue, changeInputValue, forceReactInputOnChange, waitForElement };

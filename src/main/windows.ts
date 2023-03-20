@@ -1,4 +1,4 @@
-import { BrowserWindow } from 'electron'
+import { BrowserWindow } from 'electron';
 
 export interface WindowObject {
     id: string;
@@ -22,18 +22,18 @@ export function addWindow(w: WindowObject) {
 }
 
 export function removeWindow(id: string) {
-    const index = windows.findIndex(w => w.id === id);
+    const index = windows.findIndex((w) => w.id === id);
     if (index >= 0) {
         windows.splice(index, 1);
     }
 }
 
 export function getWindow(id: string) {
-    return windows.find(w => w.id === id);
+    return windows.find((w) => w.id === id);
 }
 
 export function isWindowExist(id: string) {
-    return windows.some(w => w.id === id);
+    return windows.some((w) => w.id === id);
 }
 
 export function getWindows() {

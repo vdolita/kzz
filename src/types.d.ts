@@ -1,4 +1,4 @@
-export { }
+export {};
 
 declare global {
     interface Window {
@@ -7,6 +7,6 @@ declare global {
             onWindowCreated: (callback: (windowId: string) => void) => void;
             onWindowClosed: (callback: (windowId: string) => void) => void;
             openKsWindow: (windowId: string) => void;
-        }
+        };
     }
 }

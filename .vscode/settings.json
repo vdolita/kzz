@@ -1,14 +1,15 @@
 {
-    "cSpell.words": [
-        "antd",
-        "Asuka",
-        "fontsource",
-        "Kuaishow",
-        "kwaixiaodian",
-        "tailwindcss"
-    ],
-    "editor.formatOnSave": true,
-    "python.analysis.importFormat": "absolute",
-    "javascript.preferences.importModuleSpecifier": "relative",
-    "typescript.preferences.importModuleSpecifier": "relative",
+  "cSpell.words": [
+    "antd",
+    "Asuka",
+    "fontsource",
+    "Kuaishow",
+    "kwaixiaodian",
+    "tailwindcss"
+  ],
+  "editor.formatOnSave": true,
+  "python.analysis.importFormat": "absolute",
+  "javascript.preferences.importModuleSpecifier": "relative",
+  "typescript.preferences.importModuleSpecifier": "relative",
+  "editor.defaultFormatter": "esbenp.prettier-vscode"
 }

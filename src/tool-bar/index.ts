@@ -1,5 +1,5 @@
-import NewToolBar from './tool-bar'
+import NewToolBar from './tool-bar';
 
-NewToolBar()
+NewToolBar();
 
-export default NewToolBar
+export default NewToolBar;

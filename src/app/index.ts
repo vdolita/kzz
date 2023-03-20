@@ -1,3 +1,3 @@
-import NewApp from './app'
+import NewApp from './app';
 
-NewApp()
+NewApp();

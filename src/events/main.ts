@@ -1,8 +1,8 @@
-import { ipcMain } from "electron";
-import { IpcEvents } from ".";
-import { activate } from "../api";
-import createKuaishowWindow from "../main/kuaishow";
-import { addWindow, getManagerWindow, isWindowExist, removeWindow } from "../main/windows";
+import { ipcMain } from 'electron';
+import { IpcEvents } from '.';
+import { activate } from '../api';
+import createKuaishowWindow from '../main/kuaishow';
+import { addWindow, getManagerWindow, isWindowExist, removeWindow } from '../main/windows';
 
 export function registerEvents() {
     // Register event handlers here
@@ -16,16 +16,16 @@ export function registerEvents() {
         }
 
         const mw = createKuaishowWindow(windowId);
-        mw.on("closed", () => {
+        mw.on('closed', () => {
             getManagerWindow()?.webContents.send(IpcEvents.KS_WINDOW_CLOSED, windowId);
             removeWindow(windowId);
-        })
+        });
 
         getManagerWindow()?.webContents.send(IpcEvents.KS_WINDOW_CREATED, windowId);
 
         addWindow({
             id: windowId,
-            window: mw
+            window: mw,
         });
     });
 }

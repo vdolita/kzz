@@ -4,57 +4,58 @@ import { rules } from './webpack.rules';
 import { plugins } from './webpack.plugins';
 
 rules.push({
-  test: /\.css$/,
-  use: [
-    { loader: 'style-loader' },
-    { loader: 'css-loader' },
-    {
-      loader: "postcss-loader",
-      options: {
-        postcssOptions: {
-          plugins: [
-            [
-              "postcss-import",
-              {
-                // Options
-              },
-            ],
-            [
-              'tailwindcss/nesting',
-              {
-                // Options
-              },
-            ],
-            [
-              "tailwindcss",
-              {
-                // Options
-              },
-            ],
-            [
-              "postcss-preset-env",
-              {
-                features: { 'nesting-rules': false },
-              },
-            ],
-            [
-              "autoprefixer",
-              {
-                // Options
-              },
-            ],
-          ],
+    test: /\.css$/,
+    use: [
+        { loader: 'style-loader' },
+        { loader: 'css-loader' },
+        {
+            loader: 'postcss-loader',
+            options: {
+                postcssOptions: {
+                    plugins: [
+                        [
+                            'postcss-import',
+                            {
+                                // Options
+                            },
+                        ],
+                        [
+                            'tailwindcss/nesting',
+                            {
+                                // Options
+                            },
+                        ],
+                        [
+                            'tailwindcss',
+                            {
+                                // Options
+                            },
+                        ],
+                        [
+                            'postcss-preset-env',
+                            {
+                                features: { 'nesting-rules': false },
+                            },
+                        ],
+                        [
+                            'autoprefixer',
+                            {
+                                // Options
+                            },
+                        ],
+                    ],
+                },
+            },
         },
-      },
-    },],
+    ],
 });
 
 export const rendererConfig: Configuration = {
-  module: {
-    rules,
-  },
-  plugins,
-  resolve: {
-    extensions: ['.js', '.ts', '.jsx', '.tsx', '.css'],
-  },
+    module: {
+        rules,
+    },
+    plugins,
+    resolve: {
+        extensions: ['.js', '.ts', '.jsx', '.tsx', '.css'],
+    },
 };
