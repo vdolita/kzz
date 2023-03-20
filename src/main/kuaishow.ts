@@ -56,7 +56,7 @@ function createKuaishowWindow(key: string) {
         callback({ responseHeaders });
     });
 
-    bv.setBounds({ x: 0, y: 0, width: ksWidth, height: ksHeight });
+    bv.setBounds({ x: 0, y: 0, width: mw.getContentSize()[0], height: mw.getContentSize()[1] });
     bv.webContents.openDevTools();
     bv.webContents.loadURL(ksUrl);
 
