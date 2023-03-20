@@ -9,7 +9,8 @@
     "package": "electron-forge package",
     "make": "cross-env NODE_ENV=production electron-forge make",
     "publish": "electron-forge publish",
-    "lint": "eslint --ext .ts,.tsx ."
+    "lint": "eslint --ext .ts,.tsx .",
+    "prepare": "husky install"
   },
   "keywords": [],
   "author": {
@@ -43,6 +44,8 @@
     "eslint-plugin-import": "^2.27.5",
     "eslint-plugin-react-hooks": "^4.6.0",
     "fork-ts-checker-webpack-plugin": "^7.3.0",
+    "husky": "^8.0.0",
+    "lint-staged": "^13.2.0",
     "node-loader": "^2.0.0",
     "postcss": "^8.4.21",
     "postcss-import": "^15.1.0",
@@ -65,5 +68,14 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "rxjs": "^7.8.0"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "prettier-eslint --write",
+      "eslint"
+    ],
+    "*.{css,scss,less,md}": [
+      "prettier --write"
+    ]
   }
 }
