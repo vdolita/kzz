@@ -70,6 +70,7 @@ export default function IntervalMsg() {
 
         console.log('start interval');
         stopMsgObserver();
+        sendMsg();
         setMsgObserverCallback(sendMsg);
         startMsgObserver(msgPeriod * 1000);
         setIsStarted(true);
@@ -80,6 +81,7 @@ export default function IntervalMsg() {
             startInterval();
         } else {
             stopMsgObserver();
+            setMgsIndex(0);
         }
         setIsStarted(!isStarted);
     };

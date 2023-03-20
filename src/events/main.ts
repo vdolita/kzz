@@ -2,7 +2,7 @@ import { ipcMain } from 'electron';
 import { IpcEvents } from '.';
 import { activate } from '../api';
 import createKuaishowWindow from '../main/kuaishow';
-import { addWindow, getManagerWindow, isWindowExist, removeWindow } from '../main/windows';
+import { addWindow, getManagerWindow, getWindow, isWindowExist, removeWindow } from '../main/windows';
 
 export function registerEvents() {
     // Register event handlers here
@@ -21,11 +21,31 @@ export function registerEvents() {
             removeWindow(windowId);
         });
 
-        getManagerWindow()?.webContents.send(IpcEvents.KS_WINDOW_CREATED, windowId);
+        mw.on('show', () => {
+            getManagerWindow()?.webContents.send(IpcEvents.KS_WINDOW_CREATED, windowId);
+        });
 
         addWindow({
             id: windowId,
             window: mw,
         });
+    });
+
+    ipcMain.on(IpcEvents.KS_WINDOW_HIDE, (_, windowId) => {
+        if (!isWindowExist(windowId)) {
+            return;
+        }
+
+        const mw = getWindow(windowId);
+        mw?.hide();
+    });
+
+    ipcMain.on(IpcEvents.KS_WINDOW_SHOW, (_, windowId) => {
+        if (!isWindowExist(windowId)) {
+            return;
+        }
+
+        const mw = getWindow(windowId);
+        mw?.show();
     });
 }

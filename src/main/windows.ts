@@ -28,8 +28,8 @@ export function removeWindow(id: string) {
     }
 }
 
-export function getWindow(id: string) {
-    return windows.find((w) => w.id === id);
+export function getWindow(id: string): BrowserWindow | undefined {
+    return windows.find((w) => w.id === id)?.window;
 }
 
 export function isWindowExist(id: string) {

@@ -3,4 +3,6 @@ export const IpcEvents = {
     CREATE_KS_WINDOWS: 'ksw:create',
     KS_WINDOW_CREATED: 'ksw:created',
     KS_WINDOW_CLOSED: 'ksw:closed',
+    KS_WINDOW_HIDE: 'ksw:hide',
+    KS_WINDOW_SHOW: 'ksw:show',
 } as const;

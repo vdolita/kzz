@@ -1,16 +1,19 @@
 import Button from 'antd/es/button';
+import Switch from 'antd/es/switch';
 import { useEffect, useState } from 'react';
 
 const maxWindows = 15;
 const alphabet = 'abcdefghijklmnopqrstuvwxyz'.split('');
 
 export default function WindowManage() {
-    const [windows, setWindows] = useState<string[]>([]);
-    const [freeWindows, setFreeWindows] = useState<string[]>(alphabet.slice(0, maxWindows));
+    const usableAlphabets = alphabet.slice(0, maxWindows);
+
+    const [openedWindows, setOpenedWindows] = useState<string[]>([]);
+    const [hiddenWindows, setHiddenWindows] = useState<string[]>([]);
     const [creatingWindow, setCreatingWindow] = useState<string[]>([]);
 
     function handleCreate(windowId: string) {
-        if (windows.length >= maxWindows) {
+        if (openedWindows.length >= maxWindows) {
             return;
         }
         window.Asuka.openKsWindow(windowId);
@@ -21,53 +24,77 @@ export default function WindowManage() {
         return creatingWindow.includes(windowId);
     }
 
-    function isOpened(windowId: string) {
-        return windows.includes(windowId);
+    function toggleWindow(windowId: string) {
+        if (hiddenWindows.includes(windowId)) {
+            window.Asuka.showKsWindow(windowId);
+            setHiddenWindows(hiddenWindows.filter((v) => v !== windowId));
+        } else {
+            window.Asuka.hideKsWindow(windowId);
+            setHiddenWindows([...hiddenWindows, windowId]);
+        }
     }
 
     useEffect(() => {
         window.Asuka.onWindowClosed((windowName: string) => {
-            setWindows(windows.filter((v) => v !== windowName));
-            setFreeWindows([...freeWindows, windowName]);
+            setOpenedWindows(openedWindows.filter((v) => v !== windowName));
         });
 
         window.Asuka.onWindowCreated((windowName: string) => {
-            setWindows([...windows, windowName]);
-            setFreeWindows(freeWindows.filter((v) => v !== windowName));
+            setOpenedWindows([...openedWindows, windowName]);
             setCreatingWindow(creatingWindow.filter((v) => v !== windowName));
         });
-    }, [creatingWindow, freeWindows, windows]);
+    }, [creatingWindow, openedWindows]);
 
     return (
         <div className="container mx-auto h-full">
             <div className="h-full grid grid-cols-5 gap-4 place-content-center">
-                {windows.map((v, k) => (
-                    <WindowButton id={v} isOpened={isOpened(v)} opening={isOpening(v)} key={k} />
-                ))}
-                {freeWindows.map((v, k) => (
-                    <CreateWindowButton id={v} onCreate={handleCreate} key={k} />
+                {usableAlphabets.map((v, i) => (
+                    <WindowCell
+                        key={i}
+                        id={v}
+                        isOpened={openedWindows.includes(v)}
+                        showing={!hiddenWindows.includes(v)}
+                        onCreate={handleCreate}
+                        onToggle={toggleWindow}
+                        loading={isOpening(v)}
+                    />
                 ))}
             </div>
         </div>
     );
 }
 
-function WindowButton({ id, opening, isOpened }: { id: string; opening: boolean; isOpened: boolean }) {
-    function handleClicked() {
-        // TODO 前置窗口
+function WindowCell({
+    id,
+    isOpened,
+    showing,
+    onCreate,
+    onToggle,
+    loading,
+}: {
+    id: string;
+    isOpened: boolean;
+    showing: boolean;
+    onCreate: (id: string) => void;
+    onToggle: (id: string, checked: boolean) => void;
+    loading: boolean;
+}) {
+    function handleToggle(checked: boolean) {
+        onToggle(id, checked);
     }
 
     return (
-        <Button type="primary" onClick={handleClicked} loading={opening} disabled={isOpened}>
-            {`${id} 窗口前置`}
-        </Button>
+        <div className="flex flex-col gap-3 rounded-t-sm bg-slate-50 place-content-center py-3 justify-center items-center">
+            <span className="text-center">{`窗口-${id}`}</span>
+            <div>
+                {!isOpened || loading ? (
+                    <Button type="primary" onClick={() => onCreate(id)} disabled={isOpened} loading>
+                        创建
+                    </Button>
+                ) : (
+                    <Switch checkedChildren="开启" unCheckedChildren="关闭" checked={showing} onChange={handleToggle} />
+                )}
+            </div>
+        </div>
     );
-}
-
-function CreateWindowButton({ id, onCreate }: { id: string; onCreate: (id: string) => void }) {
-    function handleClicked() {
-        onCreate(id);
-    }
-
-    return <Button onClick={handleClicked}>{`${id} 新建窗口`}</Button>;
 }

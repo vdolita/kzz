@@ -7,6 +7,8 @@ declare global {
             onWindowCreated: (callback: (windowId: string) => void) => void;
             onWindowClosed: (callback: (windowId: string) => void) => void;
             openKsWindow: (windowId: string) => void;
+            hideKsWindow: (windowId: string) => void;
+            showKsWindow: (windowId: string) => void;
         };
     }
 }
