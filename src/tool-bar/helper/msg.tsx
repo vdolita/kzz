@@ -1,9 +1,8 @@
 import { Button, InputNumber, Input } from 'antd';
-import { ChangeEvent, useEffect, useState } from 'react';
+import { ChangeEvent, useCallback, useEffect, useState } from 'react';
 import { changeInputValue } from '../util/util';
 import FeatureBox from '../components/feature-box';
-import { Subscription } from 'rxjs/internal/Subscription';
-import { interval } from 'rxjs/internal/observable/interval';
+import { isMsgObserverStarted, setMsgObserverCallback, startMsgObserver, stopMsgObserver } from '../observer/msg';
 
 const defaultPeriod = 60;
 const minPeriod = 1;
@@ -14,8 +13,8 @@ const { TextArea } = Input;
 export default function IntervalMsg() {
     const [msgPeriod, setMsgPeriod] = useState<number>(defaultPeriod);
     const [msgContent, setMsgContent] = useState('');
+    const [msgIndex, setMgsIndex] = useState(0);
     const [isStarted, setIsStarted] = useState(false);
-    const [sub, setSub] = useState<Subscription>(null);
 
     const onChange = (val: number) => {
         console.log(`set period to ${val}`);
@@ -26,7 +25,7 @@ export default function IntervalMsg() {
         setMsgContent(e.target.value);
     };
 
-    function sendMsg() {
+    const sendMsg = useCallback(() => {
         //   "//button/span[contains(text(), '发送')]/..",
         const msgInput: HTMLInputElement | null = document.evaluate(
             '//input[contains(@placeholder, "发公评")]',
@@ -52,9 +51,17 @@ export default function IntervalMsg() {
             return;
         }
 
-        changeInputValue(msgInput, msgContent);
+        const msgList = msgContent.split('\n');
+        const msg = msgList[msgIndex].trim();
+        setMgsIndex(msgIndex === msgList.length - 1 ? 0 : msgIndex + 1);
+
+        if (msg === '') {
+            return;
+        }
+
+        changeInputValue(msgInput, msg);
         msgButton.click();
-    }
+    }, [msgContent, msgIndex]);
 
     function startInterval() {
         if (msgPeriod <= 0) {
@@ -62,31 +69,29 @@ export default function IntervalMsg() {
         }
 
         console.log('start interval');
-        const msgSub = interval(msgPeriod * 1000).subscribe(() => {
-            console.log('send msg');
-            sendMsg();
-        });
-
-        setSub(msgSub);
+        stopMsgObserver();
+        setMsgObserverCallback(sendMsg);
+        startMsgObserver(msgPeriod * 1000);
+        setIsStarted(true);
     }
 
     const onButtonClick = () => {
         if (!isStarted) {
             startInterval();
         } else {
-            sub && console.log('unsubscribe');
-            sub?.unsubscribe();
-            sub && setSub(null);
+            stopMsgObserver();
         }
         setIsStarted(!isStarted);
     };
 
     useEffect(() => {
-        return () => {
-            sub && console.log('unsubscribe mgs effect');
-            sub?.unsubscribe();
-        };
-    }, [sub]);
+        if (isMsgObserverStarted()) {
+            setMsgObserverCallback(sendMsg);
+            if (!isStarted) {
+                setIsStarted(true);
+            }
+        }
+    }, [isStarted, sendMsg]);
 
     return (
         <FeatureBox title="定时发言">
@@ -117,7 +122,13 @@ export default function IntervalMsg() {
             <div className="flex flex-row gap-x-4">
                 <span className="basis-16">发言内容:</span>
                 <div className="flex-grow">
-                    <TextArea value={msgContent} onChange={onContentChange} disabled={isStarted} rows={3} />
+                    <TextArea
+                        value={msgContent}
+                        onChange={onContentChange}
+                        placeholder="使用回车键来进行换行，多行内容将循环发送"
+                        disabled={isStarted}
+                        rows={3}
+                    />
                 </div>
             </div>
         </FeatureBox>
