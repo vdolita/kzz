@@ -1,30 +1,16 @@
-function setNativeValue(element: HTMLInputElement, value: string) {
-    const valueSetter = Object.getOwnPropertyDescriptor(element, 'value').set;
-    const prototype = Object.getPrototypeOf(element);
-    const prototypeValueSetter = Object.getOwnPropertyDescriptor(prototype, 'value').set;
-
-    if (valueSetter && valueSetter !== prototypeValueSetter) {
-        prototypeValueSetter.call(element, value);
+function tryGetElement(selector: string): HTMLElement | null {
+    if (selector.includes('//')) {
+        return document.evaluate(selector, document.body, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null)
+            .singleNodeValue as HTMLElement | null;
     } else {
-        valueSetter.call(element, value);
+        return document.querySelector(selector) as HTMLElement | null;
     }
 }
 
-function changeInputValue(element: HTMLInputElement, value: string) {
-    setNativeValue(element, value);
-    element.dispatchEvent(new Event('input', { bubbles: true }));
-}
-
-function forceReactInputOnChange(input: HTMLInputElement, value: string) {
-    // @ts-expect-error NOTE: clear the interal value to force an actual change
-    input._valueTracker?.setValue(value);
-    input.dispatchEvent(new Event('input', { bubbles: true }));
-}
-
-function waitForElement(selector: string, timeout = 10000): Promise<HTMLElement> {
+function waitForElement(selector: string, timeout = 36000000): Promise<HTMLElement> {
     return new Promise((resolve, reject) => {
-        if (document.querySelector(selector)) {
-            return resolve(document.querySelector(selector) as HTMLElement);
+        if (tryGetElement(selector)) {
+            return resolve(tryGetElement(selector));
         }
 
         let observer: MutationObserver | null = null;
@@ -35,9 +21,10 @@ function waitForElement(selector: string, timeout = 10000): Promise<HTMLElement>
         }, timeout);
 
         observer = new MutationObserver(() => {
-            const element = document.querySelector(selector);
+            const element = tryGetElement(selector);
+
             if (element) {
-                resolve(element as HTMLElement);
+                resolve(element);
                 observer.disconnect();
                 clearTimeout(timerId);
             }
@@ -50,4 +37,4 @@ function waitForElement(selector: string, timeout = 10000): Promise<HTMLElement>
     });
 }
 
-export { setNativeValue, changeInputValue, forceReactInputOnChange, waitForElement };
+export { waitForElement };

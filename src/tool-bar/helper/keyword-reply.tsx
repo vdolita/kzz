@@ -5,9 +5,12 @@ import InputNumber from 'antd/es/input-number';
 import TextArea from 'antd/es/input/TextArea';
 import Switch from 'antd/es/switch';
 import Tooltip from 'antd/es/tooltip';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { timer } from 'rxjs/internal/observable/timer';
 import FeatureBox from '../components/feature-box';
 import { getRendererDb } from '../util/db';
+import { sendMsg } from '../util/msg';
+import { waitForElement } from '../util/util';
 
 const maxKeyword = 20;
 
@@ -25,6 +28,28 @@ export default function KeyWordReplay() {
         const db = getRendererDb();
         return db.data.keywords;
     });
+    const [inCd, setInCd] = useState<string[]>([]);
+
+    const sender = useCallback(
+        (msgText: string) => {
+            if (!isEnabled) {
+                return;
+            }
+            const keyword = keywords.find((kw) => kw.isActivated && msgText.includes(kw.keyword));
+            if (keyword && keyword.isActivated && !inCd.includes(msgText)) {
+                const reply = keyword.reply;
+                sendMsg(reply);
+                setInCd([...inCd, keyword.keyword]);
+                timer(replyPeriod * 1000).subscribe(() => {
+                    setInCd(inCd.filter((cd) => cd !== keyword.keyword));
+                });
+            }
+        },
+        [inCd, isEnabled, keywords, replyPeriod],
+    );
+
+    const senderRef = useRef(sender);
+    const msgObserverRef = useRef<MutationObserver>(null);
 
     function onPeriodChange(val: number) {
         console.log(`set period to ${val}`);
@@ -60,48 +85,58 @@ export default function KeyWordReplay() {
         setKeywords([...keywords, { keyword: '', reply: '', isActivated: true }]);
     }
 
-    function startWatch() {
-        const msgContainer = document.evaluate(
-            `//div[contains(@class, 'live-panel')]//div[contains(@class, 'innerScrollContainer')]`,
-            document,
-            null,
-            XPathResult.FIRST_ORDERED_NODE_TYPE,
-            null,
-        ).singleNodeValue as HTMLElement;
+    useEffect(() => {
+        if (msgObserverRef.current) {
+            console.log('msg observer already exists');
+            return;
+        }
 
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.type === 'childList') {
-                    const msg = mutation.addedNodes[0] as HTMLElement;
-                    const msgContent = document.evaluate(
-                        `.//span[contains(@class, 'replied-content')]`,
-                        msg,
-                        null,
-                        XPathResult.FIRST_ORDERED_NODE_TYPE,
-                        null,
-                    ).singleNodeValue as HTMLSpanElement;
+        console.log('init msg observer');
+        let observer: MutationObserver = null;
+        waitForElement(`//div[contains(@class, 'live-panel')]//div[contains(@class, 'innerScrollContainer')]`).then(
+            (msgContainer) => {
+                observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.type === 'childList') {
+                            console.log('msg added');
+                            const msg = mutation.addedNodes[0] as HTMLElement;
+                            const msgContent = document.evaluate(
+                                `.//span[contains(@class, 'replied-content')]`,
+                                msg,
+                                null,
+                                XPathResult.FIRST_ORDERED_NODE_TYPE,
+                                null,
+                            ).singleNodeValue as HTMLSpanElement;
 
-                    const msgText = msgContent.innerText;
-                    const keyword = keywords.find((kw) => kw.isActivated && msgText.includes(kw.keyword));
-                    if (keyword) {
-                        const reply = keyword.reply;
-                        const replyBtn = msg.querySelector('.reply-btn') as HTMLElement;
-                        replyBtn.click();
-                        const replyInput = document.querySelector('.reply-input') as HTMLInputElement;
-                        replyInput.value = reply;
-                        const sendBtn = document.querySelector('.send-btn') as HTMLElement;
-                        sendBtn.click();
-                    }
-                }
-            });
-        });
+                            const msgText = msgContent.innerText;
+                            console.log(msgText);
+                            senderRef.current(msgText);
+                        }
+                    });
+                });
 
-        observer.observe(msgContainer, {
-            childList: true,
-        });
-    }
+                observer.observe(msgContainer, {
+                    childList: true,
+                    subtree: true,
+                });
+
+                msgObserverRef.current = observer;
+            },
+        );
+
+        return () => {
+            console.log('disconnect msg observer');
+            msgObserverRef.current?.disconnect();
+            msgObserverRef.current = null;
+        };
+    }, []);
 
     useEffect(() => {
+        senderRef.current = sender;
+    }, [sender]);
+
+    useEffect(() => {
+        console.log('update keywords');
         const db = getRendererDb();
         db.data.keywords = keywords;
         db.write();

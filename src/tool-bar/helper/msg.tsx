@@ -1,8 +1,8 @@
 import { Button, InputNumber, Input } from 'antd';
 import { ChangeEvent, useCallback, useEffect, useState } from 'react';
-import { changeInputValue } from '../util/util';
 import FeatureBox from '../components/feature-box';
 import { isMsgObserverStarted, setMsgObserverCallback, startMsgObserver, stopMsgObserver } from '../observer/msg';
+import { sendMsg } from '../util/msg';
 
 const defaultPeriod = 60;
 const minPeriod = 1;
@@ -25,32 +25,7 @@ export default function IntervalMsg() {
         setMsgContent(e.target.value);
     };
 
-    const sendMsg = useCallback(() => {
-        //   "//button/span[contains(text(), '发送')]/..",
-        const msgInput: HTMLInputElement | null = document.evaluate(
-            '//input[contains(@placeholder, "发公评")]',
-            document.body,
-            null,
-            XPathResult.FIRST_ORDERED_NODE_TYPE,
-            null,
-        ).singleNodeValue as HTMLInputElement;
-
-        //var s =document.createElement('script')
-        // s.src = "http://localhost:8080/tool.js"
-        // document.body.appendChild(s)
-
-        const msgButton: HTMLButtonElement | null = document.evaluate(
-            "//button/span[contains(text(), '发送')]/..",
-            document.body,
-            null,
-            XPathResult.FIRST_ORDERED_NODE_TYPE,
-            null,
-        ).singleNodeValue as HTMLButtonElement;
-
-        if (!msgInput || !msgButton) {
-            return;
-        }
-
+    const send = useCallback(() => {
         const msgList = msgContent.split('\n');
         const msg = msgList[msgIndex].trim();
         setMgsIndex(msgIndex === msgList.length - 1 ? 0 : msgIndex + 1);
@@ -59,8 +34,7 @@ export default function IntervalMsg() {
             return;
         }
 
-        changeInputValue(msgInput, msg);
-        msgButton.click();
+        sendMsg(msg);
     }, [msgContent, msgIndex]);
 
     function startInterval() {
@@ -70,8 +44,8 @@ export default function IntervalMsg() {
 
         console.log('start interval');
         stopMsgObserver();
-        sendMsg();
-        setMsgObserverCallback(sendMsg);
+        send();
+        setMsgObserverCallback(send);
         startMsgObserver(msgPeriod * 1000);
         setIsStarted(true);
     }
@@ -88,12 +62,12 @@ export default function IntervalMsg() {
 
     useEffect(() => {
         if (isMsgObserverStarted()) {
-            setMsgObserverCallback(sendMsg);
+            setMsgObserverCallback(send);
             if (!isStarted) {
                 setIsStarted(true);
             }
         }
-    }, [isStarted, sendMsg]);
+    }, [isStarted, send]);
 
     return (
         <FeatureBox title="定时发言">
