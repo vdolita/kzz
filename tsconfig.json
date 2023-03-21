@@ -12,10 +12,11 @@
     "outDir": "dist",
     "moduleResolution": "node",
     "resolveJsonModule": true,
+    "removeComments": true,
     "paths": {
       "*": [
         "node_modules/*"
-      ]
+      ],
     },
   },
   "include": [

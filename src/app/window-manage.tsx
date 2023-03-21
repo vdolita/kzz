@@ -88,11 +88,11 @@ function WindowCell({
             <span className="text-center">{`窗口-${id}`}</span>
             <div>
                 {!isOpened || loading ? (
-                    <Button type="primary" onClick={() => onCreate(id)} disabled={isOpened} loading>
+                    <Button type="primary" onClick={() => onCreate(id)} disabled={isOpened} loading={loading}>
                         创建
                     </Button>
                 ) : (
-                    <Switch checkedChildren="开启" unCheckedChildren="关闭" checked={showing} onChange={handleToggle} />
+                    <Switch checkedChildren="显示" unCheckedChildren="隐藏" checked={showing} onChange={handleToggle} />
                 )}
             </div>
         </div>

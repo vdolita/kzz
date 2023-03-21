@@ -16,6 +16,7 @@ function createManagerWindow() {
         webPreferences: {
             preload: preloadPath,
             devTools: process.env.NODE_ENV === 'development',
+            partition: 'persist:manager',
         },
         show: false,
     });
