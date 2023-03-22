@@ -15,9 +15,13 @@ function NewToolBar() {
     toolBar.classList.add('bg-slate-100');
     toolBar.classList.add('z-10');
 
-    waitForElement('div#root section#main-container').then((mainContainer) => {
-        mainContainer.appendChild(toolBar);
-    });
+    waitForElement('div#root section#main-container', 20 * 1000)
+        .then((mainContainer) => {
+            mainContainer.appendChild(toolBar);
+        })
+        .catch(() => {
+            document.querySelector('div#root section#main-container')?.appendChild(toolBar);
+        });
 
     const root = createRoot(toolBar);
     root.render(<ToolBar />);

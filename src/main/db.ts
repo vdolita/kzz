@@ -4,8 +4,8 @@ import { TextFile } from 'lowdb/node';
 
 import path from 'path';
 
-type Data = {
-    licenses: Array<{ key: string; active: boolean }>;
+export type KsDBData = {
+    keywords: Array<{ keyword: string; reply: string; isActivated: boolean }>;
 };
 
 class EncryptJsonFile<T> implements Adapter<T> {
@@ -21,7 +21,7 @@ class EncryptJsonFile<T> implements Adapter<T> {
             return null;
         } else {
             if (safeStorage.isEncryptionAvailable()) {
-                return JSON.parse(safeStorage.decryptString(Buffer.from(data, 'utf-8'))) as T;
+                return JSON.parse(safeStorage.decryptString(Buffer.from(data, 'base64'))) as T;
             }
             return JSON.parse(data) as T;
         }
@@ -30,23 +30,22 @@ class EncryptJsonFile<T> implements Adapter<T> {
     write(obj: T): Promise<void> {
         const data = JSON.stringify(obj, null, 2);
         if (safeStorage.isEncryptionAvailable()) {
-            return this.#adapter.write(safeStorage.encryptString(data).toString('utf-8'));
+            return this.#adapter.write(safeStorage.encryptString(data).toString('base64'));
         } else {
             return this.#adapter.write(JSON.stringify(obj, null, 2));
         }
     }
 }
 
-let db: Low<Data>;
+let ksDB: Low<KsDBData>;
 
-export async function getMainDb() {
-    if (!db) {
-        const dbPath = path.join(app.getPath('userData'), 'db.json');
-        const adapter = new EncryptJsonFile<Data>(dbPath);
-        db = new Low(adapter);
-        await db.read();
+export async function getKsDB() {
+    if (!ksDB) {
+        const dbPath = path.join(app.getPath('userData'), 'ks.json');
+        const adapter = new EncryptJsonFile<KsDBData>(dbPath);
+        ksDB = new Low(adapter);
+        await ksDB.read();
     }
-    db.data = db.data || { licenses: [] };
-    db.data.licenses = db.data.licenses || [];
-    return db;
+    ksDB.data = ksDB.data || { keywords: [] };
+    return ksDB;
 }

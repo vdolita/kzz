@@ -8,7 +8,6 @@ import Tooltip from 'antd/es/tooltip';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { timer } from 'rxjs/internal/observable/timer';
 import FeatureBox from '../components/feature-box';
-import { getRendererDb } from '../util/db';
 import { sendMsg } from '../util/msg';
 import { waitForElement } from '../util/util';
 
@@ -24,10 +23,7 @@ export default function KeyWordReplay() {
     const [replyPeriod, setReplyPeriod] = useState<number>(10);
     const [isEnabled, setIsEnabled] = useState(false);
     const [showKwSetting, setShowKwSetting] = useState(false);
-    const [keywords, setKeywords] = useState<Keyword[]>(() => {
-        const db = getRendererDb();
-        return db.data.keywords;
-    });
+    const [keywords, setKeywords] = useState<Keyword[]>([]);
     const [inCd, setInCd] = useState<string[]>([]);
 
     const sender = useCallback(
@@ -38,7 +34,7 @@ export default function KeyWordReplay() {
             const keyword = keywords.find((kw) => kw.isActivated && msgText.includes(kw.keyword));
             if (keyword && keyword.isActivated && !inCd.includes(msgText)) {
                 const reply = keyword.reply;
-                sendMsg(reply);
+                sendMsg(reply.trim());
                 setInCd([...inCd, keyword.keyword]);
                 timer(replyPeriod * 1000).subscribe(() => {
                     setInCd(inCd.filter((cd) => cd !== keyword.keyword));
@@ -136,10 +132,16 @@ export default function KeyWordReplay() {
     }, [sender]);
 
     useEffect(() => {
+        console.log('init keywords');
+        window.Asuka.getKsDB().then((db) => {
+            console.log(db);
+            setKeywords(db.keywords);
+        });
+    }, []);
+
+    useEffect(() => {
         console.log('update keywords');
-        const db = getRendererDb();
-        db.data.keywords = keywords;
-        db.write();
+        window.Asuka.setKsDB({ keywords });
     }, [keywords]);
 
     return (
@@ -216,11 +218,11 @@ function KeywordCell({
     onChange: (index: number, keyword: Keyword) => void;
 }) {
     function handleKeywordChange(e: React.ChangeEvent<HTMLInputElement>) {
-        onChange(index, { ...keyword, keyword: e.target.value.trim() });
+        onChange(index, { ...keyword, keyword: e.target.value });
     }
 
     function handleReplyChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-        onChange(index, { ...keyword, reply: e.target.value.trim() });
+        onChange(index, { ...keyword, reply: e.target.value });
     }
 
     function handleSwitchChange() {

@@ -10,7 +10,7 @@ let db: LowSync<Data>;
 export function getAppDb() {
     if (!db) {
         db = new LowSync(new LocalStorage('kzzApp'));
-        db.data = { licenses: [] };
+        db.data = db.data || { licenses: [] };
     }
     return db;
 }

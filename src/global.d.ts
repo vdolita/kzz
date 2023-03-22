@@ -1,5 +1,8 @@
 export {};
 
+type KsDBData = {
+    keywords: Array<{ keyword: string; reply: string; isActivated: boolean }>;
+};
 declare global {
     interface Window {
         Asuka: {
@@ -9,6 +12,8 @@ declare global {
             openKsWindow: (windowId: string) => void;
             hideKsWindow: (windowId: string) => void;
             showKsWindow: (windowId: string) => void;
+            getKsDB: () => Promise<KsDBData>;
+            setKsDB: (data: KsDBData) => Promise<void>;
         };
     }
 }

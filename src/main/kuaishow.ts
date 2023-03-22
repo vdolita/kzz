@@ -7,6 +7,7 @@ import { registerFileProtocol } from './protocol';
 const ksWidth = 1440;
 const ksHeight = 800;
 declare const TOOL_WEBPACK_ENTRY: string;
+declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
 
 const ksUrl = 'https://zs.kwaixiaodian.com/page/helper';
 
@@ -31,6 +32,7 @@ function createKuaishowWindow(key: string) {
         webPreferences: {
             devTools: isDev(),
             partition: `persist:ksw${key}`,
+            preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
         },
     });
     mw.setBrowserView(bv);

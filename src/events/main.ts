@@ -1,6 +1,7 @@
 import { ipcMain } from 'electron';
 import { IpcEvents } from '.';
 import { activate } from '../api';
+import { getKsDB, KsDBData } from '../main/db';
 import createKuaishowWindow from '../main/kuaishow';
 import { addWindow, getManagerWindow, getWindow, isWindowExist, removeWindow } from '../main/windows';
 
@@ -47,5 +48,16 @@ export function registerEvents() {
 
         const mw = getWindow(windowId);
         mw?.show();
+    });
+
+    ipcMain.handle(IpcEvents.KS_DB_GET, async () => {
+        const db = await getKsDB();
+        return db.data;
+    });
+
+    ipcMain.handle(IpcEvents.KS_DB_SET, async (_, data: KsDBData) => {
+        const db = await getKsDB();
+        db.data = data;
+        await db.write();
     });
 }

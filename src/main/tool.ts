@@ -5,6 +5,8 @@ import path from 'path';
 
 const ksUrl = 'https://zs.kwaixiaodian.com/page/helper';
 declare const TOOL_WEBPACK_ENTRY: string;
+declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
+
 const ksWidth = 1440;
 const ksHeight = 800;
 
@@ -18,6 +20,7 @@ function createQuickToolWindow() {
         webPreferences: {
             partition: `persist:quickTool`,
             devTools: true,
+            preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
         },
         minimizable: false,
     });
