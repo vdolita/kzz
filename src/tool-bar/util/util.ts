@@ -20,12 +20,12 @@ function waitForElement(selector: string, timeout = 36000000): Promise<HTMLEleme
             observer?.disconnect();
         }, timeout);
 
-        observer = new MutationObserver(() => {
+        observer = new MutationObserver((_, ob) => {
             const element = tryGetElement(selector);
 
             if (element) {
                 resolve(element);
-                observer.disconnect();
+                ob.disconnect();
                 clearTimeout(timerId);
             }
         });

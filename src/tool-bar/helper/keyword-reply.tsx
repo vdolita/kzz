@@ -20,11 +20,13 @@ interface Keyword {
 }
 
 export default function KeyWordReplay() {
-    const [replyPeriod, setReplyPeriod] = useState<number>(10);
+    const [replyPeriod, setReplyPeriod] = useState<number>(30);
     const [isEnabled, setIsEnabled] = useState(false);
     const [showKwSetting, setShowKwSetting] = useState(false);
     const [keywords, setKeywords] = useState<Keyword[]>([]);
-    const [inCd, setInCd] = useState<string[]>([]);
+    const queueKeyword = useRef<string[]>([]);
+    const repliedMsgs = useRef<number[]>([]);
+    const maxRepliedMsgId = useRef(0);
 
     const sender = useCallback(
         (msgText: string) => {
@@ -32,23 +34,22 @@ export default function KeyWordReplay() {
                 return;
             }
             const keyword = keywords.find((kw) => kw.isActivated && msgText.includes(kw.keyword));
-            if (keyword && keyword.isActivated && !inCd.includes(msgText)) {
+            if (keyword && !queueKeyword.current.includes(keyword.keyword) && msgText.trim() !== keyword.reply.trim()) {
                 const reply = keyword.reply;
                 sendMsg(reply.trim());
-                setInCd([...inCd, keyword.keyword]);
+                queueKeyword.current.push(keyword.keyword);
                 timer(replyPeriod * 1000).subscribe(() => {
-                    setInCd(inCd.filter((cd) => cd !== keyword.keyword));
+                    queueKeyword.current = queueKeyword.current.filter((kw) => kw !== keyword.keyword);
                 });
             }
         },
-        [inCd, isEnabled, keywords, replyPeriod],
+        [isEnabled, keywords, replyPeriod],
     );
 
     const senderRef = useRef(sender);
-    const msgObserverRef = useRef<MutationObserver>(null);
+    const msgObserverRef = useRef<MutationObserver>(new MutationObserver(mutationCallback));
 
     function onPeriodChange(val: number) {
-        console.log(`set period to ${val}`);
         setReplyPeriod(val);
     }
 
@@ -81,49 +82,68 @@ export default function KeyWordReplay() {
         setKeywords([...keywords, { keyword: '', reply: '', isActivated: true }]);
     }
 
-    useEffect(() => {
-        if (msgObserverRef.current) {
-            console.log('msg observer already exists');
-            return;
-        }
+    function mutationCallback(mutations: MutationRecord[]) {
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                const msg = mutation.addedNodes[0] as HTMLElement;
+                const msgContent = document.evaluate(
+                    `.//span[contains(@class, 'replied-content')]`,
+                    msg,
+                    null,
+                    XPathResult.FIRST_ORDERED_NODE_TYPE,
+                    null,
+                ).singleNodeValue as HTMLSpanElement;
 
-        console.log('init msg observer');
-        let observer: MutationObserver = null;
+                const msgIdBox = document.evaluate(
+                    `.//div[contains(@id, 'comment-')]`,
+                    msg,
+                    null,
+                    XPathResult.FIRST_ORDERED_NODE_TYPE,
+                    null,
+                ).singleNodeValue as HTMLDivElement;
+
+                if (!msgContent || !msgIdBox) {
+                    return;
+                }
+
+                const msgId = parseInt(msgIdBox.id.replace('comment-', ''));
+
+                if (msgId <= maxRepliedMsgId.current) {
+                    return;
+                }
+
+                maxRepliedMsgId.current = msgId;
+                if (repliedMsgs.current.includes(msgId)) {
+                    return;
+                }
+
+                if (repliedMsgs.current.length > 1000) {
+                    repliedMsgs.current.shift();
+                }
+
+                repliedMsgs.current.push(msgId);
+                const msgText = msgContent.innerText;
+                senderRef.current(msgText);
+            }
+        });
+    }
+
+    useEffect(() => {
+        const ob = msgObserverRef.current;
+
         waitForElement(`//div[contains(@class, 'live-panel')]//div[contains(@class, 'innerScrollContainer')]`).then(
             (msgContainer) => {
-                observer = new MutationObserver((mutations) => {
-                    mutations.forEach((mutation) => {
-                        if (mutation.type === 'childList') {
-                            console.log('msg added');
-                            const msg = mutation.addedNodes[0] as HTMLElement;
-                            const msgContent = document.evaluate(
-                                `.//span[contains(@class, 'replied-content')]`,
-                                msg,
-                                null,
-                                XPathResult.FIRST_ORDERED_NODE_TYPE,
-                                null,
-                            ).singleNodeValue as HTMLSpanElement;
-
-                            const msgText = msgContent.innerText;
-                            console.log(msgText);
-                            senderRef.current(msgText);
-                        }
-                    });
-                });
-
-                observer.observe(msgContainer, {
+                ob.observe(msgContainer, {
                     childList: true,
-                    subtree: true,
+                    subtree: false,
+                    attributes: false,
+                    characterData: false,
                 });
-
-                msgObserverRef.current = observer;
             },
         );
 
         return () => {
-            console.log('disconnect msg observer');
-            msgObserverRef.current?.disconnect();
-            msgObserverRef.current = null;
+            ob.disconnect();
         };
     }, []);
 
@@ -132,15 +152,12 @@ export default function KeyWordReplay() {
     }, [sender]);
 
     useEffect(() => {
-        console.log('init keywords');
         window.Asuka.getKsDB().then((db) => {
-            console.log(db);
             setKeywords(db.keywords);
         });
     }, []);
 
     useEffect(() => {
-        console.log('update keywords');
         window.Asuka.setKsDB({ keywords });
     }, [keywords]);
 
@@ -155,7 +172,7 @@ export default function KeyWordReplay() {
                         addonBefore="每"
                         addonAfter="秒"
                         value={replyPeriod}
-                        min={2}
+                        min={30}
                         max={86400}
                         onChange={onPeriodChange}
                         size="small"
