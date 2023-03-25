@@ -3,9 +3,16 @@ import { Adapter, Low } from 'lowdb';
 import { TextFile } from 'lowdb/node';
 
 import path from 'path';
+import { License } from '../model/license';
 
 export type KsDBData = {
     keywords: Array<{ keyword: string; reply: string; isActivated: boolean }>;
+};
+
+export type AppDBData = {
+    // 是否试用过
+    isTried: boolean;
+    licenses: Array<License>;
 };
 
 class EncryptJsonFile<T> implements Adapter<T> {
@@ -48,4 +55,28 @@ export async function getKsDB() {
     }
     ksDB.data = ksDB.data || { keywords: [] };
     return ksDB;
+}
+
+let appDB: Low<AppDBData>;
+
+export async function getAppDB() {
+    if (!appDB) {
+        const dbPath = path.join(app.getPath('userData'), 'app.json');
+        const adapter = new EncryptJsonFile<AppDBData>(dbPath);
+        appDB = new Low(adapter);
+        await appDB.read();
+    }
+    appDB.data = appDB.data || { isTried: false, licenses: [] };
+    return appDB;
+}
+
+export async function clearAppDB() {
+    if (!appDB) {
+        const dbPath = path.join(app.getPath('userData'), 'app.json');
+        const adapter = new EncryptJsonFile<AppDBData>(dbPath);
+        appDB = new Low(adapter);
+        await appDB.read();
+    }
+    appDB.data = { isTried: false, licenses: [] };
+    await appDB.write();
 }

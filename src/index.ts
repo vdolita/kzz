@@ -1,7 +1,8 @@
 import { app, BrowserWindow } from 'electron';
 import { registerEvents } from './events/main';
+import verifyLicense from './main/api/verification';
+import { clearAppDB, getAppDB } from './main/db';
 import createManagerWindow from './main/manager';
-import { registerFileProtocol } from './main/protocol';
 import createQuickToolWindow from './main/tool';
 import { setManagerWindow } from './main/windows';
 import { isDev } from './utils/app';
@@ -23,9 +24,10 @@ const createWindow = (): void => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', () => {
+app.on('ready', async () => {
     registerEvents();
-    registerFileProtocol();
+    await updateExpireLicenses();
+
     createWindow();
 });
 
@@ -48,3 +50,43 @@ app.on('activate', () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
+
+async function updateExpireLicenses() {
+    const db = await getAppDB();
+
+    if (isDev()) {
+        // await clearAppDB();
+    }
+
+    const licenses = db.data.licenses;
+
+    // check if license is expired
+    for (const license of licenses) {
+        // compare expired
+        const expDate = new Date(license.expireAt);
+        const now = new Date();
+        if (expDate.getTime() < now.getTime()) {
+            license.isValid = false;
+        }
+    }
+
+    await db.write();
+
+    // check if license is expired
+    const result = await verifyLicense(licenses);
+
+    if (result) {
+        db.data.licenses = db.data.licenses.map((o) => {
+            const newLicense = result.find((n) => o.licenseKey === n.licenseKey);
+            if (newLicense) {
+                return {
+                    ...o,
+                    ...newLicense,
+                };
+            }
+            return o;
+        });
+        console.log('updateExpireLicenses', db.data.licenses);
+        await db.write();
+    }
+}

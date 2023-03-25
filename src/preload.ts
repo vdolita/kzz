@@ -3,7 +3,7 @@
 
 import { contextBridge, ipcRenderer } from 'electron';
 import { IpcEvents } from './events';
-import { KsDBData } from './main/db';
+import { AppDBData, KsDBData } from './main/db';
 
 contextBridge.exposeInMainWorld('Asuka', {
     activateSoftware: (licenseKey: string) => ipcRenderer.invoke(IpcEvents.ACTIVATE_SOFTWARE, licenseKey),
@@ -32,5 +32,15 @@ contextBridge.exposeInMainWorld('Asuka', {
     },
     setKsDB: async (data: KsDBData) => {
         return await ipcRenderer.invoke(IpcEvents.KS_DB_SET, data);
+    },
+    getAppDB: async () => {
+        const data = await ipcRenderer.invoke(IpcEvents.APP_DB_GET);
+        return data;
+    },
+    setAppDB: async (data: AppDBData) => {
+        return await ipcRenderer.invoke(IpcEvents.APP_DB_SET, data);
+    },
+    startTrial: async () => {
+        return await ipcRenderer.invoke(IpcEvents.TRIAL_START);
     },
 });

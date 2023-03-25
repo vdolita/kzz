@@ -7,4 +7,7 @@ export const IpcEvents = {
     KS_WINDOW_SHOW: 'ksw:show',
     KS_DB_GET: 'ksdb:get',
     KS_DB_SET: 'ksdb:set',
+    APP_DB_GET: 'appdb:get',
+    APP_DB_SET: 'appdb:set',
+    TRIAL_START: 'trial:start',
 } as const;

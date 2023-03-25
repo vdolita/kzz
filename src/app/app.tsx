@@ -1,6 +1,4 @@
-import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import Activate from './activate';
 
 import './index.css';
 import WindowManage from './window-manage';
@@ -12,19 +10,20 @@ const NewApp = () => {
 };
 
 const App = () => {
-    const [isActivated, setIsActivated] = useState<boolean>(false);
-    const [activating, setActivating] = useState<boolean>(false);
+    // const [isActivated, setIsActivated] = useState<boolean>(false);
+    // const [activating, setActivating] = useState<boolean>(false);
 
-    async function handleActivate(key: string) {
-        setActivating(true);
-        const result = await window.Asuka.activateSoftware(key);
-        if (result) {
-            setIsActivated(true);
-        }
-        setActivating(false);
-    }
+    // async function handleActivate(key: string) {
+    //     setActivating(true);
+    //     const result = await window.Asuka.activateSoftware(key);
+    //     if (result) {
+    //         setIsActivated(true);
+    //     }
+    //     setActivating(false);
+    // }
 
-    return isActivated ? <WindowManage /> : <Activate loading={activating} onActivate={handleActivate} />;
+    // return isActivated ? <WindowManage /> : <Activate loading={activating} onActivate={handleActivate} />;
+    return <WindowManage />;
 };
 
 export default NewApp;

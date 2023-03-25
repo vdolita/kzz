@@ -54,7 +54,6 @@ export default function Explanation() {
     }
 
     const onSelectedPdsChange = (value: string[]) => {
-        console.log(`selected ${value}`);
         setSelected(value);
     };
 
@@ -137,8 +136,6 @@ export default function Explanation() {
             return '';
         }
 
-        console.log('startExplanation', selected);
-
         let pdID = selected[0];
         const pdIndex = selected.indexOf(currentProduct);
 
@@ -213,7 +210,6 @@ export default function Explanation() {
     }
 
     function startExpInterval() {
-        console.log('start interval');
         gapSub?.unsubscribe();
         expSub?.unsubscribe();
 
@@ -233,10 +229,8 @@ export default function Explanation() {
         const newGapSub = interval(expPeriodSeconds * 1000 + gapPeriodSeconds * 1000)
             .pipe(startWith(0))
             .subscribe(() => {
-                console.log('start exxxp');
                 const pdId = startExpRef.current();
                 if (!pdId) {
-                    console.log('no product to start');
                     setIsStarted(false);
                     stopExpRef.current();
                     return;
@@ -253,7 +247,6 @@ export default function Explanation() {
     }
 
     const stopExpInterval = useCallback(() => {
-        console.log('stop interval');
         expSub?.unsubscribe();
         gapSub?.unsubscribe();
         setExpSub(null);
@@ -262,13 +255,11 @@ export default function Explanation() {
 
     function isProductsEqual(p1: Product[], p2: Product[]) {
         if (p1.length !== p2.length) {
-            console.log('length not equal');
             return false;
         }
 
         for (let i = 0; i < p1.length; i++) {
             if (p1[i].productID !== p2[i].productID) {
-                console.log('productID not equal', p1[i].productID, p2[i].productID);
                 return false;
             }
         }
@@ -281,19 +272,16 @@ export default function Explanation() {
         if (isProductsEqual(pds, products)) {
             return;
         }
-        console.log('products changed', pds);
         setProducts(pds);
     }, [products]);
 
     useEffect(() => {
-        console.log('update stopExpRef');
         stopExpRef.current = (): void => {
             stopExpInterval();
         };
     }, [stopExpInterval]);
 
     useEffect(() => {
-        console.log('update startExpRef');
         startExpRef.current = (): string => {
             return startExplanation();
         };
@@ -301,27 +289,23 @@ export default function Explanation() {
 
     // refresh products every 100ms
     useEffect(() => {
-        console.log('refresh products');
         const productSubscribe = interval(100).subscribe(() => {
             refreshProducts();
         });
 
         return () => {
-            console.log('unsubscribe products');
             productSubscribe?.unsubscribe();
         };
     }, [refreshProducts]);
 
     useEffect(() => {
         return () => {
-            console.log('unsubscribe expSub effect');
             expSub?.unsubscribe();
         };
     }, [expSub]);
 
     useEffect(() => {
         return () => {
-            console.log('unsubscribe gapSub effect');
             gapSub?.unsubscribe();
         };
     }, [gapSub]);

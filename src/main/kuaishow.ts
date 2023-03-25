@@ -1,4 +1,4 @@
-import { BrowserView, BrowserWindow, dialog } from 'electron';
+import { BrowserWindow, dialog } from 'electron';
 import { isDev } from '../utils/app';
 import fs from 'fs';
 import path from 'path';
@@ -19,8 +19,9 @@ function createKuaishowWindow(key: string) {
         minHeight: ksHeight,
         show: false,
         webPreferences: {
-            partition: `memory:${key}`,
-            devTools: false,
+            partition: `persist:ksw${key}`,
+            devTools: isDev(),
+            preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
         },
         minimizable: false,
     });
@@ -28,18 +29,8 @@ function createKuaishowWindow(key: string) {
     mw.removeMenu();
     mw.setTitle(`助手 - ${key}`);
 
-    const bv = new BrowserView({
-        webPreferences: {
-            devTools: isDev(),
-            partition: `persist:ksw${key}`,
-            preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
-        },
-    });
-    mw.setBrowserView(bv);
-    bv.setAutoResize({ width: true, height: true });
-
-    registerFileProtocol(bv.webContents.session);
-    bv.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    registerFileProtocol(mw.webContents.session);
+    mw.webContents.session.webRequest.onHeadersReceived((details, callback) => {
         const { responseHeaders } = details;
 
         if (responseHeaders['content-security-policy']) {
@@ -58,12 +49,11 @@ function createKuaishowWindow(key: string) {
         callback({ responseHeaders });
     });
 
-    bv.setBounds({ x: 0, y: 0, width: mw.getContentSize()[0], height: mw.getContentSize()[1] });
-    bv.webContents.openDevTools();
-    bv.webContents.loadURL(ksUrl);
+    mw.webContents.openDevTools();
+    mw.loadURL(ksUrl);
 
-    bv.webContents.on('did-finish-load', () => {
-        const url = bv.webContents.getURL();
+    mw.webContents.on('did-finish-load', () => {
+        const url = mw.webContents.getURL();
         if (url.includes('page/helper')) {
             let toolPath = TOOL_WEBPACK_ENTRY;
 
@@ -74,9 +64,8 @@ function createKuaishowWindow(key: string) {
             }
 
             const src = toolPath.replace('file:', 'kzz:').replace(/\\/g, '/');
-            bv.webContents.executeJavaScript(`;console.log('toolPath', '${src}');`);
 
-            bv.webContents
+            mw.webContents
                 .executeJavaScript(
                     `
                 const js = document.createElement('script')
@@ -88,7 +77,7 @@ function createKuaishowWindow(key: string) {
         }
     });
 
-    bv.webContents.once('dom-ready', () => {
+    mw.webContents.once('dom-ready', () => {
         mw.show();
     });
 

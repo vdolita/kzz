@@ -8,7 +8,6 @@ let isStarted = false;
 export function startMsgObserver(gap: number) {
     stopMsgObserver();
     msgObserverSub = interval(gap).subscribe(() => {
-        console.log('msg observer', cb);
         cb && cb();
     });
     isStarted = true;
@@ -21,7 +20,6 @@ export function stopMsgObserver() {
 }
 
 export function setMsgObserverCallback(callback: () => void) {
-    console.log('setMsgObserverCallback', callback);
     cb = callback;
 }
 

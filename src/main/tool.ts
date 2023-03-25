@@ -50,7 +50,7 @@ function createQuickToolWindow() {
     });
 
     mw.webContents.openDevTools();
-    mw.webContents.loadURL(ksUrl);
+    mw.loadURL(ksUrl);
 
     mw.webContents.on('did-finish-load', () => {
         const url = mw.webContents.getURL();
@@ -64,7 +64,6 @@ function createQuickToolWindow() {
             }
 
             const src = toolPath.replace('file:', 'kzz:').replace(/\\/g, '/');
-            mw.webContents.executeJavaScript(`;console.log('toolPath', '${src}');`);
 
             mw.webContents
                 .executeJavaScript(

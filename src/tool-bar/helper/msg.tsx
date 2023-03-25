@@ -17,7 +17,6 @@ export default function IntervalMsg() {
     const [isStarted, setIsStarted] = useState(false);
 
     const onChange = (val: number) => {
-        console.log(`set period to ${val}`);
         setMsgPeriod(val);
     };
 
@@ -42,7 +41,6 @@ export default function IntervalMsg() {
             return;
         }
 
-        console.log('start interval');
         stopMsgObserver();
         send();
         setMsgObserverCallback(send);

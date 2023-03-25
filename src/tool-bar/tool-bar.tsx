@@ -25,7 +25,6 @@ function NewToolBar() {
 
     const root = createRoot(toolBar);
     root.render(<ToolBar />);
-    console.log('tool loaded');
 }
 
 export default NewToolBar;
