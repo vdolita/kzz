@@ -9,7 +9,7 @@ let db: LowSync<Data>;
 
 export function getAppDb() {
     if (!db) {
-        db = new LowSync(new LocalStorage('kzzApp'));
+        db = new LowSync(new LocalStorage('LiveOrderBoostApp'));
         db.data = db.data || { licenses: [] };
     }
     return db;

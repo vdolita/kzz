@@ -55,14 +55,7 @@ function createQuickToolWindow() {
     mw.webContents.on('did-finish-load', () => {
         const url = mw.webContents.getURL();
         if (url.includes('page/helper')) {
-            let toolPath = TOOL_WEBPACK_ENTRY;
-
-            if (toolPath.includes('file:') && !fs.existsSync(toolPath)) {
-                toolPath = path.join(process.resourcesPath, 'app', '.webpack', 'renderer', 'tool', 'index.js');
-                toolPath = toolPath.replace(/\\/g, '/');
-                toolPath = `file://${toolPath}`;
-            }
-
+            const toolPath = TOOL_WEBPACK_ENTRY;
             const src = toolPath.replace('file:', 'kzz:').replace(/\\/g, '/');
 
             mw.webContents
@@ -71,7 +64,7 @@ function createQuickToolWindow() {
                     const js = document.createElement('script')
                     js.src = '${src}'
                     document.body.appendChild(js)
-                `,
+                    `,
                 )
                 .catch(console.error);
         }

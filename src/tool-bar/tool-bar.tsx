@@ -8,7 +8,7 @@ import { waitForElement } from './util/util';
 
 function NewToolBar() {
     const toolBar = document.createElement('div');
-    toolBar.id = 'kzz-tool-bar';
+    toolBar.id = 'liveorderboost-tool-bar';
     toolBar.classList.add('w-full');
     toolBar.classList.add('fixed');
     toolBar.classList.add('bottom-0');

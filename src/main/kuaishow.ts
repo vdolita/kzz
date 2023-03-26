@@ -1,7 +1,5 @@
 import { BrowserWindow, dialog } from 'electron';
 import { isDev } from '../utils/app';
-import fs from 'fs';
-import path from 'path';
 import { registerFileProtocol } from './protocol';
 
 const ksWidth = 1440;
@@ -22,6 +20,7 @@ function createKuaishowWindow(key: string) {
             partition: `persist:ksw${key}`,
             devTools: isDev(),
             preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
+            backgroundThrottling: false,
         },
         minimizable: false,
     });
@@ -55,23 +54,16 @@ function createKuaishowWindow(key: string) {
     mw.webContents.on('did-finish-load', () => {
         const url = mw.webContents.getURL();
         if (url.includes('page/helper')) {
-            let toolPath = TOOL_WEBPACK_ENTRY;
-
-            if (toolPath.includes('file:') && !fs.existsSync(toolPath)) {
-                toolPath = path.join(process.resourcesPath, 'app', '.webpack', 'renderer', 'tool', 'index.js');
-                toolPath = toolPath.replace(/\\/g, '/');
-                toolPath = `file://${toolPath}`;
-            }
-
+            const toolPath = TOOL_WEBPACK_ENTRY;
             const src = toolPath.replace('file:', 'kzz:').replace(/\\/g, '/');
 
             mw.webContents
                 .executeJavaScript(
                     `
-                const js = document.createElement('script')
-                js.src = '${src}'
-                document.body.appendChild(js)
-            `,
+                    const js = document.createElement('script')
+                    js.src = '${src}'
+                    document.body.appendChild(js)
+                    `,
                 )
                 .catch(console.error);
         }
