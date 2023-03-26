@@ -30,7 +30,7 @@ declare global {
             setKsDB: (data: KsDBData) => Promise<void>;
             getAppDB: () => Promise<AppDBData>;
             setAppDB: (data: AppDBData) => Promise<void>;
-            startTrial: () => Promise<void>;
+            startTrial: (windowId: string) => Promise<void>;
         };
     }
 }

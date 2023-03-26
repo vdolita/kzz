@@ -55,7 +55,7 @@ async function updateExpireLicenses() {
     const db = await getAppDB();
 
     if (isDev()) {
-        // await clearAppDB();
+        await clearAppDB();
     }
 
     const licenses = db.data.licenses;

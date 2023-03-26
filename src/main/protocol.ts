@@ -7,7 +7,7 @@ function registerFileProtocol(s?: Session) {
     }
     ptl.registerFileProtocol('kzz', (request, callback) => {
         const filePath = request.url.replace('kzz://', '');
-        callback(filePath);
+        callback(decodeURI(filePath));
     });
 }
 

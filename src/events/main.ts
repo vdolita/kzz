@@ -1,4 +1,5 @@
 import { ipcMain } from 'electron';
+import { timer } from 'rxjs';
 import { IpcEvents } from '.';
 import { activate } from '../main/api';
 import { AppDBData, getAppDB, getKsDB, KsDBData } from '../main/db';
@@ -73,9 +74,15 @@ export function registerEvents() {
         await db.write();
     });
 
-    ipcMain.on(IpcEvents.TRIAL_START, async () => {
+    ipcMain.on(IpcEvents.TRIAL_START, async (_, windowId: string) => {
         const db = await getAppDB();
         db.data.isTried = true;
         await db.write();
+
+        // close window after 15 minutes
+        timer(1000 * 60 * 15).subscribe(() => {
+            const mw = getWindow(windowId);
+            mw?.close();
+        });
     });
 }

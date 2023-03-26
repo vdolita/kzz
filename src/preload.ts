@@ -40,7 +40,7 @@ contextBridge.exposeInMainWorld('Asuka', {
     setAppDB: async (data: AppDBData) => {
         return await ipcRenderer.invoke(IpcEvents.APP_DB_SET, data);
     },
-    startTrial: async () => {
-        return await ipcRenderer.invoke(IpcEvents.TRIAL_START);
+    startTrial: async (windowId: string) => {
+        return await ipcRenderer.send(IpcEvents.TRIAL_START, windowId);
     },
 });

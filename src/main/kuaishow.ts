@@ -27,7 +27,7 @@ function createKuaishowWindow(key: string) {
     });
 
     mw.removeMenu();
-    mw.setTitle(`助手 - ${key}`);
+    mw.setTitle(`爆单助手 - ${key}`);
 
     registerFileProtocol(mw.webContents.session);
     mw.webContents.session.webRequest.onHeadersReceived((details, callback) => {

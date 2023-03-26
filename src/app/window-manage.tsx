@@ -14,7 +14,6 @@ export default function WindowManage() {
     const [openedWindows, setOpenedWindows] = useState<string[]>([]);
     const [hiddenWindows, setHiddenWindows] = useState<string[]>([]);
     const [creatingWindow, setCreatingWindow] = useState<string[]>([]);
-    const [loading, setLoading] = useState<boolean>(true);
     const [licenses, setLicenses] = useState<License[]>([]);
     const [isTried, setIsTried] = useState<boolean>(true);
     const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -47,7 +46,7 @@ export default function WindowManage() {
     }
 
     function handleTrial(windowId: string) {
-        window.Asuka.startTrial();
+        window.Asuka.startTrial(windowId);
         setIsTried(true);
         handleCreate(windowId);
     }
@@ -94,22 +93,29 @@ export default function WindowManage() {
     return (
         <div className="container mx-auto h-full">
             {contextHolder}
-            <div className="h-full grid grid-cols-5 gap-4 place-content-center">
-                {usableAlphabets.map((v, i) => (
-                    <WindowCell
-                        key={i}
-                        id={v}
-                        isTrial={i == 0 && !isTried}
-                        isOpened={openedWindows.includes(v)}
-                        showing={!hiddenWindows.includes(v)}
-                        onCreate={handleCreate}
-                        onToggle={toggleWindow}
-                        onActivate={() => setIsModalOpen(true)}
-                        onTrial={handleTrial}
-                        loading={isOpening(v)}
-                        license={licenses[i]}
-                    />
-                ))}
+            <div className="h-full flex flex-col justify-center gap-4">
+                <div className="grid grid-cols-5 gap-4 place-content-center">
+                    {usableAlphabets.map((v, i) => (
+                        <WindowCell
+                            key={i}
+                            id={v}
+                            isTrial={i == 0 && !isTried}
+                            isOpened={openedWindows.includes(v)}
+                            showing={!hiddenWindows.includes(v)}
+                            onCreate={handleCreate}
+                            onToggle={toggleWindow}
+                            onActivate={() => setIsModalOpen(true)}
+                            onTrial={handleTrial}
+                            loading={isOpening(v)}
+                            license={licenses[i]}
+                        />
+                    ))}
+                </div>
+                <div className="w-full">
+                    <p className="text-center text-lg">
+                        激活码购买请加微信: <span className="font-bold">baodan12306</span>
+                    </p>
+                </div>
             </div>
             <Modal
                 title="激活"
@@ -159,7 +165,18 @@ function WindowCell({
         onToggle(id, checked);
     }
 
-    function renActivated() {
+    function renExpire() {
+        let expireStr = 'N/A';
+
+        if (license) {
+            const date = new Date(license.expireAt);
+            expireStr = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+        }
+
+        return <div className="text-sm">到期时间: {expireStr}</div>;
+    }
+
+    function renCreateWindow() {
         return (
             <div>
                 {!isOpened || loading ? (
@@ -192,7 +209,13 @@ function WindowCell({
     function renTrial() {
         return (
             <div>
-                <Popconfirm title="提示" description="开启窗口后将无法再次试用！" onConfirm={() => onTrial(id)}>
+                <Popconfirm
+                    title="提示"
+                    description="开启窗口后将无法再次试用, 15分钟后窗口将自动关闭！"
+                    cancelText="取消"
+                    okText="确认"
+                    onConfirm={() => onTrial(id)}
+                >
                     <Button type="primary">试用</Button>
                 </Popconfirm>
             </div>
@@ -203,8 +226,9 @@ function WindowCell({
         <div className="flex flex-col gap-3 rounded-t-sm bg-slate-50 place-content-center py-3 justify-center items-center">
             <span className="text-center">{`窗口-${id}`}</span>
             {isTrial && !license ? renTrial() : null}
-            {license && license.isValid ? renActivated() : null}
-            {(!license || !license.isValid) && !isTrial ? renUnActivated() : null}
+            {license && license.isValid ? renCreateWindow() : null}
+            {(!isTrial && !license) || (license && !license.isValid) ? renUnActivated() : null}
+            {renExpire()}
         </div>
     );
 }
