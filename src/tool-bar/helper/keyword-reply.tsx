@@ -131,16 +131,18 @@ export default function KeyWordReplay() {
     useEffect(() => {
         const ob = msgObserverRef.current;
 
-        waitForElement(`//div[contains(@class, 'live-panel')]//div[contains(@class, 'innerScrollContainer')]`).then(
-            (msgContainer) => {
+        waitForElement(`//div[contains(@class, 'live-panel')]//div[contains(@class, 'innerScrollContainer')]`)
+            .then((msgContainer) => {
                 ob.observe(msgContainer, {
                     childList: true,
                     subtree: false,
                     attributes: false,
                     characterData: false,
                 });
-            },
-        );
+            })
+            .catch(() => {
+                // to do
+            });
 
         return () => {
             ob.disconnect();

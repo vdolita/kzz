@@ -41,11 +41,10 @@ export default function IntervalMsg() {
             return;
         }
 
-        stopMsgObserver();
         send();
+
         setMsgObserverCallback(send);
         startMsgObserver(msgPeriod * 1000);
-        setIsStarted(true);
     }
 
     const onButtonClick = () => {

@@ -28,7 +28,7 @@ const config: ForgeConfig = {
     ],
     plugins: [
         new WebpackPlugin({
-            mainConfig,
+            mainConfig: mainConfig(),
             devServer: {
                 host: 'localhost',
             },

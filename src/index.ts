@@ -3,7 +3,6 @@ import { registerEvents } from './events/main';
 import verifyLicense from './main/api/verification';
 import { clearAppDB, getAppDB } from './main/db';
 import createManagerWindow from './main/manager';
-import createQuickToolWindow from './main/tool';
 import { setManagerWindow } from './main/windows';
 import { isDev } from './utils/app';
 
@@ -16,9 +15,6 @@ const createWindow = (): void => {
     // Create the browser window.
     const mw = createManagerWindow();
     setManagerWindow(mw);
-
-    // for tool development
-    isDev() && createQuickToolWindow();
 };
 
 // This method will be called when Electron has finished

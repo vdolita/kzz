@@ -6,7 +6,7 @@ let cb: () => void;
 let isStarted = false;
 
 export function startMsgObserver(gap: number) {
-    stopMsgObserver();
+    msgObserverSub?.unsubscribe();
     msgObserverSub = interval(gap).subscribe(() => {
         cb && cb();
     });
@@ -15,6 +15,7 @@ export function startMsgObserver(gap: number) {
 
 export function stopMsgObserver() {
     msgObserverSub?.unsubscribe();
+    msgObserverSub = null;
     cb = null;
     isStarted = false;
 }

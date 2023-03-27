@@ -2,10 +2,9 @@ import { Radio, Button, Select, InputNumber, Switch } from 'antd';
 import type { RadioChangeEvent } from 'antd';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import FeatureBox from '../components/feature-box';
-import { Subscription } from 'rxjs/internal/Subscription';
 import { timer } from 'rxjs/internal/observable/timer';
 import { interval } from 'rxjs/internal/observable/interval';
-import { startWith } from 'rxjs/internal/operators/startWith';
+import { isExpObserverStarted, setExpCallback, startExpObserver, stopExpObserver } from '../observer/explanation';
 
 interface Product {
     productID: number;
@@ -23,15 +22,12 @@ export default function Explanation() {
     const [products, setProducts] = useState<Product[]>(getProducts());
     const [selected, setSelected] = useState<Array<string>>([]);
     const [isStarted, setIsStarted] = useState(false);
-    const [expSub, setExpSub] = useState<Subscription>(null);
-    const [gapSub, setGapSub] = useState<Subscription>(null);
     const [expPeriod, setExpPeriod] = useState<number>(defaultPeriod);
     const [gapPeriod, setGapPeriod] = useState<number>(defaultPeriod);
     const [isInterval, setIsInterval] = useState(true);
     const [currentProduct, setCurrentProduct] = useState<string>('');
 
-    const startExpRef = useRef<() => string>(null);
-    const stopExpRef = useRef<() => void>(null);
+    const refreshRef = useRef(null);
 
     /**  //button/span[contains(text(),"开始讲解")]/ancestor::div[contains(@class, "goods-item")] */
     /**  //div[contains(@class, "with-order")]/input  */
@@ -59,7 +55,7 @@ export default function Explanation() {
 
     function onButtonClick() {
         if (isStarted) {
-            stopExpInterval();
+            stopExpObserver();
         } else {
             startExpInterval();
         }
@@ -133,6 +129,8 @@ export default function Explanation() {
 
     const startExplanation = useCallback((): string => {
         if (selected.length === 0) {
+            setIsStarted(false);
+            stopExpObserver();
             return '';
         }
 
@@ -142,8 +140,6 @@ export default function Explanation() {
         if (pdIndex > -1 && pdIndex < selected.length - 1) {
             pdID = selected[pdIndex + 1];
         }
-
-        setCurrentProduct(pdID);
 
         const pdBtn = document.evaluate(
             `//div[contains(@id, '${pdID}')]//button/span[contains(text(), '开始')]/..`,
@@ -160,18 +156,16 @@ export default function Explanation() {
         if (!isInterval) {
             const newSelected = selected.filter((s) => s !== pdID);
             setSelected(newSelected);
-
-            if (newSelected.length === 0) {
-                expSub?.unsubscribe();
-            }
         }
 
         pdBtn.click();
         timer(1000).subscribe(() => {
             clickConfirmBtn();
         });
+
+        setCurrentProduct(pdID);
         return pdID;
-    }, [currentProduct, expSub, isInterval, selected]);
+    }, [currentProduct, isInterval, selected]);
 
     function clickConfirmBtn() {
         const confirmBtn = document.evaluate(
@@ -189,9 +183,9 @@ export default function Explanation() {
         confirmBtn.click();
     }
 
-    function endExplanation(pdId: string) {
+    const endExplanation = useCallback(() => {
         const pdBtn = document.evaluate(
-            `//div[contains(@id, '${pdId}')]//button/span[contains(text(), '结束')]/..`,
+            `//div[contains(@id, 'recording')][contains(@class, 'container')]//button/span[contains(text(), '结束')]/..`,
             document,
             null,
             XPathResult.FIRST_ORDERED_NODE_TYPE,
@@ -207,18 +201,11 @@ export default function Explanation() {
         timer(1000).subscribe(() => {
             clickConfirmBtn();
         });
-    }
+    }, []);
 
     function startExpInterval() {
-        gapSub?.unsubscribe();
-        expSub?.unsubscribe();
-
         let expPeriodSeconds = expPeriod;
-        let gapPeriodSeconds = gapPeriod;
-
-        if (gapPeriodSeconds < minGapPeriod) {
-            gapPeriodSeconds = minGapPeriod;
-        }
+        const gapPeriodSeconds = gapPeriod;
 
         if (timeUnit === 2) {
             expPeriodSeconds *= 60;
@@ -226,32 +213,9 @@ export default function Explanation() {
             expPeriodSeconds *= 3600;
         }
 
-        const newGapSub = interval(expPeriodSeconds * 1000 + gapPeriodSeconds * 1000)
-            .pipe(startWith(0))
-            .subscribe(() => {
-                const pdId = startExpRef.current();
-                if (!pdId) {
-                    setIsStarted(false);
-                    stopExpRef.current();
-                    return;
-                }
-
-                const newExpSub = timer(expPeriodSeconds * 1000).subscribe(() => {
-                    endExplanation(pdId);
-                });
-
-                setExpSub(newExpSub);
-            });
-
-        setGapSub(newGapSub);
+        setExpCallback(startExplanation, endExplanation);
+        startExpObserver(expPeriodSeconds * 1000, gapPeriodSeconds * 1000);
     }
-
-    const stopExpInterval = useCallback(() => {
-        expSub?.unsubscribe();
-        gapSub?.unsubscribe();
-        setExpSub(null);
-        setGapSub(null);
-    }, [expSub, gapSub]);
 
     function isProductsEqual(p1: Product[], p2: Product[]) {
         if (p1.length !== p2.length) {
@@ -272,43 +236,33 @@ export default function Explanation() {
         if (isProductsEqual(pds, products)) {
             return;
         }
+        console.log('refresh products');
         setProducts(pds);
     }, [products]);
 
-    useEffect(() => {
-        stopExpRef.current = (): void => {
-            stopExpInterval();
-        };
-    }, [stopExpInterval]);
-
-    useEffect(() => {
-        startExpRef.current = (): string => {
-            return startExplanation();
-        };
-    }, [startExplanation]);
-
     // refresh products every 100ms
     useEffect(() => {
-        const productSubscribe = interval(100).subscribe(() => {
+        if (refreshRef.current) {
+            refreshRef.current.unsubscribe();
+        }
+
+        refreshRef.current = interval(100).subscribe(() => {
             refreshProducts();
         });
 
         return () => {
-            productSubscribe?.unsubscribe();
+            refreshRef.current?.unsubscribe();
         };
     }, [refreshProducts]);
 
     useEffect(() => {
-        return () => {
-            expSub?.unsubscribe();
-        };
-    }, [expSub]);
-
-    useEffect(() => {
-        return () => {
-            gapSub?.unsubscribe();
-        };
-    }, [gapSub]);
+        if (isExpObserverStarted()) {
+            setExpCallback(startExplanation, endExplanation);
+            if (!isStarted) {
+                setIsStarted(true);
+            }
+        }
+    }, [endExplanation, isStarted, startExplanation]);
 
     return (
         <FeatureBox title="商品讲解">

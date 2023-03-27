@@ -50,12 +50,21 @@ rules.push({
     ],
 });
 
-export const rendererConfig: Configuration = {
-    module: {
-        rules,
-    },
-    plugins,
-    resolve: {
-        extensions: ['.js', '.ts', '.jsx', '.tsx', '.css'],
-    },
-};
+export function rendererConfig(): Configuration {
+    const isProd = process.env.NODE_ENV === 'production';
+    const pgs = [...plugins];
+
+    if (!isProd) {
+        pgs.pop();
+    }
+
+    return {
+        module: {
+            rules,
+        },
+        plugins: pgs,
+        resolve: {
+            extensions: ['.js', '.ts', '.jsx', '.tsx', '.css'],
+        },
+    };
+}

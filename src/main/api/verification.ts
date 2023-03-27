@@ -21,7 +21,7 @@ async function verifyLicense(licenses: Array<License>): Promise<Array<License> |
 
         return null;
     } catch (e) {
-        console.log(e);
+        console.error(e);
         return null;
     }
 }
