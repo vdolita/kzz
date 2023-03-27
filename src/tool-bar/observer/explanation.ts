@@ -12,11 +12,14 @@ export function startExpObserver(period: number, gap: number) {
     expObserverSub?.unsubscribe();
     expTimerSub?.unsubscribe();
 
+    console.info('start exp observer', period, gap, new Date());
     expObserverSub = interval(period + gap)
         .pipe(startWith(0))
         .subscribe(() => {
+            console.info('exp observer sub called', new Date());
             startCallback && startCallback();
             expTimerSub = timer(period).subscribe(() => {
+                console.info('exp observer end called', new Date());
                 endCallback && endCallback();
             });
         });
@@ -24,6 +27,7 @@ export function startExpObserver(period: number, gap: number) {
 }
 
 export function stopExpObserver() {
+    console.info('stop exp observer', new Date());
     expObserverSub?.unsubscribe();
     expTimerSub?.unsubscribe();
     expObserverSub = null;
@@ -34,6 +38,7 @@ export function stopExpObserver() {
 }
 
 export function setExpCallback(startCB: () => void, endCB: () => void) {
+    console.info('set exp callback', new Date());
     startCallback = startCB;
     endCallback = endCB;
 }

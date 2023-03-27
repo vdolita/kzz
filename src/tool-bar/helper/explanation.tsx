@@ -77,7 +77,7 @@ export default function Explanation() {
 
     function getProducts(): Product[] {
         const snapItems = document.evaluate(
-            "//button/span[contains(text(),'开始讲解')]/ancestor::div[contains(@class, 'goods-item')]",
+            "//button/span[contains(text(),'讲解')]/ancestor::div[contains(@class, 'goods-item') and @role='button']",
             document,
             null,
             XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
@@ -128,59 +128,63 @@ export default function Explanation() {
     }
 
     const startExplanation = useCallback((): string => {
-        if (selected.length === 0) {
-            setIsStarted(false);
-            stopExpObserver();
-            return '';
+        try {
+            if (selected.length === 0) {
+                setIsStarted(false);
+                stopExpObserver();
+                return '';
+            }
+
+            let pdID = selected[0];
+            const pdIndex = selected.indexOf(currentProduct);
+
+            if (pdIndex > -1 && pdIndex < selected.length - 1) {
+                pdID = selected[pdIndex + 1];
+            }
+
+            const pdBtn = document.evaluate(
+                `//div[contains(@id, '${pdID}')]//button/span[contains(text(), '开始')]/..`,
+                document,
+                null,
+                XPathResult.FIRST_ORDERED_NODE_TYPE,
+                null,
+            ).singleNodeValue as HTMLButtonElement;
+
+            if (!pdBtn) {
+                return;
+            }
+
+            if (!isInterval) {
+                const newSelected = selected.filter((s) => s !== pdID);
+                setSelected(newSelected);
+            }
+
+            console.log('start exp click', pdID, new Date());
+            pdBtn.click();
+            timer(1000).subscribe(() => {
+                clickConfirmBtn();
+            });
+
+            setCurrentProduct(pdID);
+            return pdID;
+        } catch (e) {
+            console.info(e, new Date());
         }
-
-        let pdID = selected[0];
-        const pdIndex = selected.indexOf(currentProduct);
-
-        if (pdIndex > -1 && pdIndex < selected.length - 1) {
-            pdID = selected[pdIndex + 1];
-        }
-
-        const pdBtn = document.evaluate(
-            `//div[contains(@id, '${pdID}')]//button/span[contains(text(), '开始')]/..`,
-            document,
-            null,
-            XPathResult.FIRST_ORDERED_NODE_TYPE,
-            null,
-        ).singleNodeValue as HTMLButtonElement;
-
-        if (!pdBtn) {
-            return;
-        }
-
-        if (!isInterval) {
-            const newSelected = selected.filter((s) => s !== pdID);
-            setSelected(newSelected);
-        }
-
-        pdBtn.click();
-        timer(1000).subscribe(() => {
-            clickConfirmBtn();
-        });
-
-        setCurrentProduct(pdID);
-        return pdID;
     }, [currentProduct, isInterval, selected]);
 
     function clickConfirmBtn() {
-        const confirmBtn = document.evaluate(
-            `//div[contains(@class, "ant-modal-body")]//button/span[contains(text(), "确 定")]/..`,
+        const buttons = document.evaluate(
+            `//div[contains(@class, "ant-modal-body")]//button[contains(@class, 'ant-btn-primary')]`,
             document,
             null,
-            XPathResult.FIRST_ORDERED_NODE_TYPE,
+            XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
             null,
-        ).singleNodeValue as HTMLButtonElement;
+        );
 
-        if (!confirmBtn) {
-            return;
+        for (let i = 0; i < buttons.snapshotLength; i++) {
+            const btn = buttons.snapshotItem(i) as HTMLButtonElement;
+            btn.click();
         }
-
-        confirmBtn.click();
     }
 
     const endExplanation = useCallback(() => {
@@ -257,6 +261,7 @@ export default function Explanation() {
 
     useEffect(() => {
         if (isExpObserverStarted()) {
+            console.info('set exp callback', new Date());
             setExpCallback(startExplanation, endExplanation);
             if (!isStarted) {
                 setIsStarted(true);
