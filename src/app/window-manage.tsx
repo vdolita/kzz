@@ -211,7 +211,7 @@ function WindowCell({
             <div>
                 <Popconfirm
                     title="提示"
-                    description="开启窗口后将无法再次试用, 15分钟后窗口将自动关闭！"
+                    description="开启窗口后将无法再次试用, 15分钟后窗口将自动关闭!"
                     cancelText="取消"
                     okText="确认"
                     onConfirm={() => onTrial(id)}
@@ -224,7 +224,7 @@ function WindowCell({
 
     return (
         <div className="flex flex-col gap-3 rounded-t-sm bg-slate-50 place-content-center py-3 justify-center items-center">
-            <span className="text-center">{`窗口-${id}`}</span>
+            <span className="text-center">{`多开 ${alphabet.indexOf(id) + 1}`}</span>
             {isTrial && !license ? renTrial() : null}
             {license && license.isValid ? renCreateWindow() : null}
             {(!isTrial && !license) || (license && !license.isValid) ? renUnActivated() : null}
