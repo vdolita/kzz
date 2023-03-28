@@ -2,5 +2,5 @@
 .vscode
 .webpack
 node_modules
-make
 out
+Makefile
