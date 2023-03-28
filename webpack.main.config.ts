@@ -1,16 +1,20 @@
 import { Configuration, DefinePlugin } from 'webpack';
 import WebpackObfuscator from 'webpack-obfuscator';
+import { BundleAnalyzerPlugin } from 'webpack-bundle-analyzer';
 
 import { rules } from './webpack.rules';
 
 // export function mainConfig(): Configuration {
 export function mainConfig(): Configuration {
     const isProd = process.env.NODE_ENV === 'production';
-    console.log('isProd', isProd);
 
     const plugins = [
         new DefinePlugin({
             APP_ENV: JSON.stringify(process.env.NODE_ENV),
+        }),
+        new BundleAnalyzerPlugin({
+            analyzerMode: 'static',
+            openAnalyzer: false,
         }),
         new WebpackObfuscator(
             {
@@ -21,6 +25,7 @@ export function mainConfig(): Configuration {
     ];
 
     if (!isProd) {
+        plugins.pop();
         plugins.pop();
     }
 

@@ -56,6 +56,7 @@ export function rendererConfig(): Configuration {
 
     if (!isProd) {
         pgs.pop();
+        pgs.pop();
     }
 
     return {
