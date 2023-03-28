@@ -50,7 +50,7 @@ let ksDB: Low<KsDBData>;
 
 export async function getKsDB() {
     if (!ksDB) {
-        const dbPath = path.join(app.getPath('userData'), '..', '.vdolita', 'liveorderboost', 'ks.json');
+        const dbPath = path.join(app.getPath('appData'), '.vdolita', 'liveorderboost', 'ks.json');
         // if path not exist then create it
         if (!fs.existsSync(path.dirname(dbPath))) {
             fs.mkdirSync(path.dirname(dbPath), { recursive: true });
@@ -67,7 +67,7 @@ let appDB: Low<AppDBData>;
 
 export async function getAppDB() {
     if (!appDB) {
-        const dbPath = path.join(app.getPath('userData'), '..', '.vdolita', 'liveorderboost', 'app.json');
+        const dbPath = path.join(app.getPath('appData'), '.vdolita', 'liveorderboost', 'app.json');
         // if path not exist then create it
         if (!fs.existsSync(path.dirname(dbPath))) {
             fs.mkdirSync(path.dirname(dbPath), { recursive: true });
@@ -82,7 +82,7 @@ export async function getAppDB() {
 
 export async function clearAppDB() {
     if (!appDB) {
-        const dbPath = path.join(app.getPath('userData'), '..', '.vdolita', 'liveorderboost', 'app.json');
+        const dbPath = path.join(app.getPath('appData'), '.vdolita', 'liveorderboost', 'app.json');
         const adapter = new EncryptJsonFile<AppDBData>(dbPath);
         appDB = new Low(adapter);
         await appDB.read();

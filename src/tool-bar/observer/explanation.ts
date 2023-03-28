@@ -1,5 +1,6 @@
-import { startWith, timer } from 'rxjs';
 import { interval } from 'rxjs/internal/observable/interval';
+import { timer } from 'rxjs/internal/observable/timer';
+import { startWith } from 'rxjs/internal/operators/startWith';
 import { Subscription } from 'rxjs/internal/Subscription';
 
 let expObserverSub: Subscription;

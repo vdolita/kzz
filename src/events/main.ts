@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { timer } from 'rxjs';
+import { timer } from 'rxjs/internal/observable/timer';
 import { IpcEvents } from '.';
 import { activate } from '../main/api';
 import { AppDBData, getAppDB, getKsDB, KsDBData } from '../main/db';
