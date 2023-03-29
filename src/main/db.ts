@@ -1,4 +1,4 @@
-import { app, safeStorage } from 'electron';
+import { app } from 'electron';
 import { Adapter, Low } from 'lowdb';
 import { TextFile } from 'lowdb/node';
 
@@ -26,31 +26,32 @@ class EncryptJsonFile<T> implements Adapter<T> {
 
     async read(): Promise<T | null> {
         const data = await this.#adapter.read();
-        if (data === null) {
+        if (data === null || data === '') {
             return null;
         } else {
-            if (safeStorage.isEncryptionAvailable()) {
-                return JSON.parse(safeStorage.decryptString(Buffer.from(data, 'base64'))) as T;
-            }
             return JSON.parse(CryptoJS.AES.decrypt(data, 'liveboostorder').toString(CryptoJS.enc.Utf8)) as T;
         }
     }
 
     write(obj: T): Promise<void> {
         const data = JSON.stringify(obj, null, 2);
-        if (safeStorage.isEncryptionAvailable()) {
-            return this.#adapter.write(safeStorage.encryptString(data).toString('base64'));
-        } else {
-            return this.#adapter.write(CryptoJS.AES.encrypt(data, 'liveboostorder').toString());
-        }
+        return this.#adapter.write(CryptoJS.AES.encrypt(data, 'liveboostorder').toString());
     }
+}
+
+function getKsDBPath() {
+    return path.join(app.getPath('appData'), '.vdolita', 'liveorderboost', 'ks.json');
+}
+
+function getAppDBPath() {
+    return path.join(app.getPath('appData'), '.vdolita', 'liveorderboost', 'app.json');
 }
 
 let ksDB: Low<KsDBData>;
 
 export async function getKsDB() {
     if (!ksDB) {
-        const dbPath = path.join(app.getPath('appData'), '.vdolita', 'liveorderboost', 'ks.json');
+        const dbPath = getKsDBPath();
         // if path not exist then create it
         if (!fs.existsSync(path.dirname(dbPath))) {
             fs.mkdirSync(path.dirname(dbPath), { recursive: true });
@@ -67,7 +68,7 @@ let appDB: Low<AppDBData>;
 
 export async function getAppDB() {
     if (!appDB) {
-        const dbPath = path.join(app.getPath('appData'), '.vdolita', 'liveorderboost', 'app.json');
+        const dbPath = getAppDBPath();
         // if path not exist then create it
         if (!fs.existsSync(path.dirname(dbPath))) {
             fs.mkdirSync(path.dirname(dbPath), { recursive: true });
@@ -82,11 +83,30 @@ export async function getAppDB() {
 
 export async function clearAppDB() {
     if (!appDB) {
-        const dbPath = path.join(app.getPath('appData'), '.vdolita', 'liveorderboost', 'app.json');
+        const dbPath = getAppDBPath();
         const adapter = new EncryptJsonFile<AppDBData>(dbPath);
         appDB = new Low(adapter);
         await appDB.read();
     }
     appDB.data = { isTried: false, licenses: [] };
     await appDB.write();
+}
+
+export async function checkDBAccess() {
+    try {
+        const dbPath = getAppDBPath();
+        await fs.promises.access(dbPath, fs.constants.R_OK | fs.constants.W_OK);
+
+        const ksPath = getKsDBPath();
+        await fs.promises.access(ksPath, fs.constants.R_OK | fs.constants.W_OK);
+
+        const db = await getAppDB();
+        const ks = await getKsDB();
+
+        db.write();
+        ks.write();
+    } catch (error) {
+        console.error(error);
+        throw new Error('无法访数据文件');
+    }
 }

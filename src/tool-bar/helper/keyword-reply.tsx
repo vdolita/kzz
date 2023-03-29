@@ -7,6 +7,8 @@ import Switch from 'antd/es/switch';
 import Tooltip from 'antd/es/tooltip';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { timer } from 'rxjs/internal/observable/timer';
+import { debounceTime } from 'rxjs/internal/operators/debounceTime';
+import { Subject } from 'rxjs/internal/Subject';
 import FeatureBox from '../components/feature-box';
 import { sendMsg } from '../util/msg';
 import { waitForElement } from '../util/util';
@@ -27,6 +29,8 @@ export default function KeyWordReplay() {
     const queueKeyword = useRef<string[]>([]);
     const repliedMsgs = useRef<number[]>([]);
     const maxRepliedMsgId = useRef(0);
+
+    const keyWordSubject = useRef(new Subject<Keyword[]>());
 
     const sender = useCallback(
         (msgText: string) => {
@@ -144,8 +148,14 @@ export default function KeyWordReplay() {
                 // to do
             });
 
+        const keywordSubscriber = keyWordSubject.current.pipe(debounceTime(1000)).subscribe((ks) => {
+            console.log('save keywords', ks);
+            window.Asuka.setKsDB({ keywords: ks });
+        });
+
         return () => {
             ob.disconnect();
+            keywordSubscriber.unsubscribe();
         };
     }, []);
 
@@ -160,7 +170,7 @@ export default function KeyWordReplay() {
     }, []);
 
     useEffect(() => {
-        window.Asuka.setKsDB({ keywords });
+        keyWordSubject.current.next(keywords);
     }, [keywords]);
 
     return (

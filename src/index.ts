@@ -1,7 +1,7 @@
 import { app, autoUpdater, BrowserWindow, dialog } from 'electron';
 import { registerEvents } from './events/main';
 import verifyLicense from './main/api/verification';
-import { clearAppDB, getAppDB } from './main/db';
+import { checkDBAccess, clearAppDB, getAppDB } from './main/db';
 import createManagerWindow from './main/manager';
 import { setManagerWindow } from './main/windows';
 import { isDev } from './utils/app';
@@ -22,9 +22,17 @@ const createWindow = (): void => {
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
     registerEvents();
-    await updateExpireLicenses();
-    createWindow();
     checkUpdate();
+
+    try {
+        await checkDBAccess();
+        await checkLicenses();
+    } catch (error) {
+        dialog.showErrorBox('系统错误', error.message);
+        app.quit();
+    }
+
+    createWindow();
 });
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -75,7 +83,7 @@ function checkUpdate() {
     }
 }
 
-async function updateExpireLicenses() {
+async function checkLicenses() {
     const db = await getAppDB();
 
     if (isDev()) {
@@ -84,17 +92,9 @@ async function updateExpireLicenses() {
 
     const licenses = db.data.licenses;
 
-    // check if license is expired
-    for (const license of licenses) {
-        // compare expired
-        const expDate = new Date(license.expireAt);
-        const now = new Date();
-        if (expDate.getTime() < now.getTime()) {
-            license.isValid = false;
-        }
+    if (licenses.length === 0) {
+        return;
     }
-
-    await db.write();
 
     // check if license is expired
     const result = await verifyLicense(licenses);
@@ -110,7 +110,8 @@ async function updateExpireLicenses() {
             }
             return o;
         });
-        console.log('updateExpireLicenses', db.data.licenses);
         await db.write();
+    } else {
+        throw new Error('激活码验证失败，请稍后重试');
     }
 }
