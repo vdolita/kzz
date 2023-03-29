@@ -26,7 +26,11 @@ export function mainConfig(): Configuration {
 
     if (!isProd) {
         plugins.pop();
-        plugins.pop();
+    }
+
+    if (isProd) {
+        // remove bundle analyzer plugin
+        plugins.splice(1, 1);
     }
 
     return {

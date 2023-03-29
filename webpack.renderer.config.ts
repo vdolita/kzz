@@ -56,7 +56,11 @@ export function rendererConfig(): Configuration {
 
     if (!isProd) {
         pgs.pop();
-        pgs.pop();
+    }
+
+    if (isProd) {
+        // remove bundle analyzer plugin
+        pgs.splice(1, 1);
     }
 
     return {
