@@ -1,7 +1,7 @@
 {
   "name": "kzz",
   "productName": "LiveOrderBoost",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "直播带货爆单助手",
   "main": ".webpack/main",
   "scripts": {

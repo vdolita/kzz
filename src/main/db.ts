@@ -40,11 +40,21 @@ class EncryptJsonFile<T> implements Adapter<T> {
 }
 
 function getKsDBPath() {
-    return path.join(app.getPath('appData'), '.vdolita', 'liveorderboost', 'ks.json');
+    const filePath = path.join(app.getPath('appData'), '.vdolita', 'liveorderboost', 'ks.json');
+    // create folder if not exist
+    if (!fs.existsSync(path.dirname(filePath))) {
+        fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    }
+    return filePath;
 }
 
 function getAppDBPath() {
-    return path.join(app.getPath('appData'), '.vdolita', 'liveorderboost', 'app.json');
+    const filePath = path.join(app.getPath('appData'), '.vdolita', 'liveorderboost', 'app.json');
+    // create folder if not exist
+    if (!fs.existsSync(path.dirname(filePath))) {
+        fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    }
+    return filePath;
 }
 
 let ksDB: Low<KsDBData>;
@@ -52,10 +62,6 @@ let ksDB: Low<KsDBData>;
 export async function getKsDB() {
     if (!ksDB) {
         const dbPath = getKsDBPath();
-        // if path not exist then create it
-        if (!fs.existsSync(path.dirname(dbPath))) {
-            fs.mkdirSync(path.dirname(dbPath), { recursive: true });
-        }
         const adapter = new EncryptJsonFile<KsDBData>(dbPath);
         ksDB = new Low(adapter);
         await ksDB.read();
@@ -69,10 +75,6 @@ let appDB: Low<AppDBData>;
 export async function getAppDB() {
     if (!appDB) {
         const dbPath = getAppDBPath();
-        // if path not exist then create it
-        if (!fs.existsSync(path.dirname(dbPath))) {
-            fs.mkdirSync(path.dirname(dbPath), { recursive: true });
-        }
         const adapter = new EncryptJsonFile<AppDBData>(dbPath);
         appDB = new Low(adapter);
         await appDB.read();
@@ -95,16 +97,17 @@ export async function clearAppDB() {
 export async function checkDBAccess() {
     try {
         const dbPath = getAppDBPath();
-        await fs.promises.access(dbPath, fs.constants.R_OK | fs.constants.W_OK);
 
         const ksPath = getKsDBPath();
-        await fs.promises.access(ksPath, fs.constants.R_OK | fs.constants.W_OK);
 
         const db = await getAppDB();
         const ks = await getKsDB();
 
-        db.write();
-        ks.write();
+        await db.write();
+        await ks.write();
+
+        await fs.promises.access(dbPath, fs.constants.R_OK | fs.constants.W_OK);
+        await fs.promises.access(ksPath, fs.constants.R_OK | fs.constants.W_OK);
     } catch (error) {
         console.error(error);
         throw new Error('无法访数据文件');
